@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.schedule.compose.SettingsStorage
+import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.repo.HomeworkRepo
 import java.time.LocalDate
 

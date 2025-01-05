@@ -2,10 +2,12 @@ package com.example.schedule.compose.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val BackgroundLight = Color(0xFFF9F7F7)
+val PrimaryLight = Color(0xFFDBE2EF)
+val SecondaryLight = Color(0xFF3F72AF)
+val TextLight = Color(0xFF112D4E)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val BackgroundDark = Color(0xFF222831)
+val PrimaryDark = Color(0xFF393E46)
+val SecondaryDark = Color(0xFF00ADB5)
+val TextDark = Color(0xFFEEEEEE)

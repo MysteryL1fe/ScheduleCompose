@@ -25,7 +25,7 @@ import com.example.schedule.compose.activities.ChangeHomeworkActivity
 import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Lesson
 import com.example.schedule.compose.repo.HomeworkRepo
-import com.example.schedule.compose.Utils
+import com.example.schedule.compose.utils.Utils
 import java.time.LocalDate
 
 @Composable

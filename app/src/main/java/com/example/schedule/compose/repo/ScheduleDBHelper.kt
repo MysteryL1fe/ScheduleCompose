@@ -1,4 +1,4 @@
-package com.example.schedule.compose
+package com.example.schedule.compose.repo
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase

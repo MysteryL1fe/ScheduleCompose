@@ -13,7 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.schedule.compose.Utils
+import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.entity.Flow
 import com.example.schedule.compose.repo.LessonRepo
 import com.example.schedule.compose.repo.ScheduleRepo

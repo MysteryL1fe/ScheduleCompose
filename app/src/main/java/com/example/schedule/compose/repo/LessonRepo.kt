@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import com.example.schedule.compose.ScheduleDBHelper
 import com.example.schedule.compose.entity.Lesson
 
 class LessonRepo {

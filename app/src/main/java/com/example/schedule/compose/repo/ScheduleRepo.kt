@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
-import com.example.schedule.compose.ScheduleDBHelper
 import com.example.schedule.compose.entity.Flow
 import com.example.schedule.compose.entity.Schedule
 
@@ -160,7 +159,7 @@ class ScheduleRepo {
         if (foundFlow == null) return null
 
         return findByFlowAndDayOfWeekAndLessonNumAndNumerator(
-            foundFlow.id, dayOfWeek, lessonNum, numerator
+            foundFlow.id!!, dayOfWeek, lessonNum, numerator
         )
     }
 
@@ -194,7 +193,7 @@ class ScheduleRepo {
         )
         if (foundFlow == null) return null
 
-        return findAllByFlow(foundFlow.id)
+        return findAllByFlow(foundFlow.id!!)
     }
 
     fun deleteByFlow(flow: Long): Int {
@@ -214,7 +213,7 @@ class ScheduleRepo {
         )
         if (foundFlow == null) return 0
 
-        return deleteByFlow(foundFlow.id)
+        return deleteByFlow(foundFlow.id!!)
     }
 
     fun deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(
@@ -243,7 +242,7 @@ class ScheduleRepo {
         if (foundFlow == null) return 0
 
         return deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(
-            foundFlow.id, dayOfWeek, lessonNum, numerator
+            foundFlow.id!!, dayOfWeek, lessonNum, numerator
         )
     }
 }

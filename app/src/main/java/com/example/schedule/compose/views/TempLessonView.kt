@@ -16,8 +16,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
-import com.example.schedule.compose.SettingsStorage
-import com.example.schedule.compose.Utils
+import com.example.schedule.compose.utils.SettingsStorage
+import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.activities.ChangeLessonActivity
 import com.example.schedule.compose.entity.Flow
 import com.example.schedule.compose.entity.Lesson

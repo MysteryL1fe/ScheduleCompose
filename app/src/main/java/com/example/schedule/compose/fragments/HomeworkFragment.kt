@@ -14,7 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.schedule.compose.HomeworkRepo
-import com.example.schedule.compose.SettingsStorage
+import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.views.HomeworkView
 

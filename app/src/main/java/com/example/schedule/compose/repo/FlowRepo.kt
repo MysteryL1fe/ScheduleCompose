@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import com.example.schedule.compose.ScheduleDBHelper
 import com.example.schedule.compose.entity.Flow
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -33,7 +32,6 @@ class FlowRepo {
         )
     }
 
-    @JvmOverloads
     fun add(
         flowLvl: Int,
         course: Int,

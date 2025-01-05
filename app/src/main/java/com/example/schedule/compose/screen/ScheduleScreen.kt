@@ -1,4 +1,4 @@
-package com.example.schedule.compose.screens
+package com.example.schedule.compose.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -11,38 +11,36 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import com.example.schedule.compose.R
-import com.example.schedule.compose.Utils
 import com.example.schedule.compose.entity.Lesson
-import com.example.schedule.compose.view.model.ScheduleViewModel
+import com.example.schedule.compose.utils.Utils
+import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun ScheduleScreen(
-    viewModel: ScheduleViewModel,
-    textSize: TextUnit,
+    viewModel: ScheduleScreenViewModel,
     modifier: Modifier = Modifier
 ) {
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
     ) {
         itemsIndexed(viewModel.lessons) { index, lessons ->
-            LessonsView(
-                lessons = lessons,
-                startDate = viewModel.date.value,
-                daysOffset = index,
-                textSize = textSize
-            )
+            if (viewModel.displayModeFull || (lessons.size > 0 && lessons.stream().anyMatch {it != null} )) {
+                LessonsView(
+                    lessons = lessons,
+                    startDate = viewModel.date.value,
+                    daysOffset = index,
+                    viewModel = viewModel
+                )
+            }
         }
     }
 }
@@ -52,30 +50,32 @@ private fun LessonsView(
     lessons: List<Lesson?>,
     startDate: LocalDate,
     daysOffset: Int,
-    textSize: TextUnit
+    viewModel: ScheduleScreenViewModel
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         val formattedDate = startDate.plusDays(daysOffset.toLong()).format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy"))
         Text(
             text = formattedDate,
-            color = colorResource(R.color.text),
-            fontSize = textSize,
+            color = MaterialTheme.colorScheme.tertiary,
+            fontSize = viewModel.textSize,
             modifier = Modifier.padding(vertical = 10.dp)
         )
         HorizontalDivider(
             thickness = 2.dp,
-            color = colorResource(R.color.secondary)
+            color = MaterialTheme.colorScheme.secondary
         )
         lessons.forEachIndexed { index, lesson ->
-            LessonView(
-                lesson = lesson,
-                lessonNum = index + 1,
-                textSize = textSize
-            )
-            HorizontalDivider(
-                thickness = 2.dp,
-                color = colorResource(R.color.secondary)
-            )
+            if (viewModel.displayModeFull || lesson != null) {
+                LessonView(
+                    lesson = lesson,
+                    lessonNum = index + 1,
+                    viewModel = viewModel
+                )
+                HorizontalDivider(
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
         }
     }
 }
@@ -84,11 +84,11 @@ private fun LessonsView(
 private fun LessonView(
     lesson: Lesson?,
     lessonNum: Int,
-    textSize: TextUnit
+    viewModel: ScheduleScreenViewModel
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
-            .background(colorResource(R.color.primary))
+            .background(MaterialTheme.colorScheme.primary)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -98,14 +98,14 @@ private fun LessonView(
             Row(
                 modifier = Modifier
                     .background(
-                        color = colorResource(R.color.secondary),
+                        color = MaterialTheme.colorScheme.secondary,
                         shape = RoundedCornerShape(0.dp, 64.dp, 64.dp, 0.dp)
                     )
             ) {
                 Text(
                     text = lessonNum.toString(),
-                    color = colorResource(R.color.text),
-                    fontSize = textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    fontSize = viewModel.textSize,
                     modifier = Modifier.padding(25.dp, 5.dp, 10.dp, 5.dp)
                 )
             }
@@ -114,8 +114,8 @@ private fun LessonView(
             )
             Text(
                 text = Utils.lessonsBeginning[lessonNum - 1] + " - " + Utils.lessonsEnding[lessonNum - 1],
-                color = colorResource(R.color.text),
-                fontSize = textSize,
+                color = MaterialTheme.colorScheme.tertiary,
+                fontSize = viewModel.textSize,
                 modifier = Modifier.padding(10.dp, 0.dp)
             )
         }
@@ -127,8 +127,8 @@ private fun LessonView(
                 Column {
                     Text(
                         text = lesson.name,
-                        fontSize = textSize,
-                        color = colorResource(R.color.text),
+                        fontSize = viewModel.textSize,
+                        color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(20.dp, 0.dp)
                     )
 
@@ -141,9 +141,9 @@ private fun LessonView(
                                 }
                                 if (lesson.teacher?.isNotEmpty() == true) append(lesson.teacher)
                             },
-                            fontSize = textSize,
+                            fontSize = viewModel.textSize,
                             modifier = Modifier.padding(20.dp, 0.dp),
-                            color = colorResource(R.color.text)
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }

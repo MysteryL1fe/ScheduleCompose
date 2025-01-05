@@ -1,4 +1,4 @@
-package com.example.schedule.compose.view.model
+package com.example.schedule.compose.view.model.screen
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -9,8 +9,9 @@ import androidx.lifecycle.ViewModel
 import com.example.schedule.compose.entity.Lesson
 import com.example.schedule.compose.repo.LessonRepo
 import com.example.schedule.compose.repo.ScheduleRepo
+import com.example.schedule.compose.utils.SettingsStorage
 
-class ChangeScheduleViewModel(
+class ChangeScheduleScreenViewModel(
     private val lessonRepo: LessonRepo,
     private val scheduleRepo: ScheduleRepo,
     private val flowLvl: Int,
@@ -19,15 +20,18 @@ class ChangeScheduleViewModel(
     private val subgroup: Int
 ) : ViewModel() {
     var dayOfWeek by mutableIntStateOf(1)
-    var showDayPickerDialog by mutableStateOf(false)
     val numerator = mutableStateListOf<Lesson?>().apply {
         addAll(arrayOfNulls(8))
     }
     val denominator = mutableStateListOf<Lesson?>().apply {
         addAll(arrayOfNulls(8))
     }
+    var textSize by mutableStateOf(SettingsStorage.textSize)
 
-    fun updateData() {
+    var showDayPickerDialog by mutableStateOf(false)
+
+    fun update() {
+        textSize = SettingsStorage.textSize
         for (isNumerator in 0..1) {
             for (lessonNum in 1..8) {
                 if (isNumerator == 0) {
@@ -104,5 +108,11 @@ class ChangeScheduleViewModel(
 
         if (isNumerator) numerator[lessonNum - 1] = null
         else denominator[lessonNum - 1] = null
+    }
+
+    fun onDaySelected(selectedDay: Int) {
+        dayOfWeek = selectedDay
+        showDayPickerDialog = false
+        update()
     }
 }

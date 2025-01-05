@@ -1,10 +1,6 @@
-package com.example.schedule.compose
+package com.example.schedule.compose.utils
 
-import androidx.annotation.IntRange
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.util.Locale
 
 object Utils {
     val daysOfWeekNames = arrayOf(

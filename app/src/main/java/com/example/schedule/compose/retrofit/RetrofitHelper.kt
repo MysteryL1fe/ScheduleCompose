@@ -1,4 +1,4 @@
-/*
+package com.example.schedule.compose.retrofit/*
 package com.example.schedule.compose
 
 import com.example.schedule.compose.dto.FlowResponse

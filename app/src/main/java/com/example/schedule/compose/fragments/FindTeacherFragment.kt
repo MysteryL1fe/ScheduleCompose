@@ -12,7 +12,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.schedule.compose.RetrofitHelper
-import com.example.schedule.compose.SettingsStorage
+import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.dto.ScheduleResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
