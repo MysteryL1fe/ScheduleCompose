@@ -17,7 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.schedule.compose.entity.Lesson
+import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import java.time.LocalDate
@@ -32,10 +32,10 @@ fun ScheduleScreen(
         modifier = modifier
             .fillMaxSize()
     ) {
-        itemsIndexed(viewModel.lessons) { index, lessons ->
-            if (viewModel.displayModeFull || (lessons.size > 0 && lessons.stream().anyMatch {it != null} )) {
-                LessonsView(
-                    lessons = lessons,
+        itemsIndexed(viewModel.schedules) { index, schedules ->
+            if (viewModel.displayModeFull || (schedules.size > 0 && schedules.stream().anyMatch {it != null} )) {
+                SchedulesView(
+                    schedules = schedules,
                     startDate = viewModel.date.value,
                     daysOffset = index,
                     viewModel = viewModel
@@ -46,8 +46,8 @@ fun ScheduleScreen(
 }
 
 @Composable
-private fun LessonsView(
-    lessons: List<Lesson?>,
+private fun SchedulesView(
+    schedules: List<Schedule?>,
     startDate: LocalDate,
     daysOffset: Int,
     viewModel: ScheduleScreenViewModel
@@ -64,10 +64,10 @@ private fun LessonsView(
             thickness = 2.dp,
             color = MaterialTheme.colorScheme.secondary
         )
-        lessons.forEachIndexed { index, lesson ->
-            if (viewModel.displayModeFull || lesson != null) {
-                LessonView(
-                    lesson = lesson,
+        schedules.forEachIndexed { index, schedule ->
+            if (viewModel.displayModeFull || schedule != null) {
+                ScheduleView(
+                    schedule = schedule,
                     lessonNum = index + 1,
                     viewModel = viewModel
                 )
@@ -81,8 +81,8 @@ private fun LessonsView(
 }
 
 @Composable
-private fun LessonView(
-    lesson: Lesson?,
+private fun ScheduleView(
+    schedule: Schedule?,
     lessonNum: Int,
     viewModel: ScheduleScreenViewModel
 ) {
@@ -119,27 +119,47 @@ private fun LessonView(
                 modifier = Modifier.padding(10.dp, 0.dp)
             )
         }
-        if (lesson != null) {
+        if (schedule != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 10.dp)
             ) {
                 Column {
                     Text(
-                        text = lesson.name,
+                        text = schedule.subject.subject,
                         fontSize = viewModel.textSize,
                         color = MaterialTheme.colorScheme.tertiary,
                         modifier = Modifier.padding(20.dp, 0.dp)
                     )
 
-                    if (lesson.cabinet?.isNotEmpty() == true || lesson.teacher?.isNotEmpty() == true) {
+                    if (schedule.teacher?.surname?.isNotEmpty() == true) {
                         Text(
                             text = buildString {
-                                if (lesson.cabinet?.isNotEmpty() == true) {
-                                    append(lesson.cabinet)
-                                    if (lesson.teacher?.isNotEmpty() == true) append(", ")
+                                append(schedule.teacher!!.surname)
+                                if (schedule.teacher!!.name?.isNotEmpty() == true) {
+                                    append(" ${schedule.teacher!!.name}")
                                 }
-                                if (lesson.teacher?.isNotEmpty() == true) append(lesson.teacher)
+                                if (schedule.teacher!!.patronymic?.isNotEmpty() == true) {
+                                    append(" ${schedule.teacher!!.patronymic}")
+                                }
+                            },
+                            fontSize = viewModel.textSize,
+                            modifier = Modifier.padding(20.dp, 0.dp),
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+
+                    if (schedule.cabinet?.cabinet?.isNotEmpty() == true) {
+                        Text(
+                            text = buildString {
+                                append(schedule.cabinet!!.cabinet)
+                                if (schedule.cabinet?.building?.isNotEmpty() == true) {
+                                    append(", корпус ${schedule.cabinet!!.building}")
+                                }
+                                if (schedule.cabinet!!.address?.isNotEmpty() == true) {
+                                    append(", ${schedule.cabinet!!.address}")
+                                }
                             },
                             fontSize = viewModel.textSize,
                             modifier = Modifier.padding(20.dp, 0.dp),

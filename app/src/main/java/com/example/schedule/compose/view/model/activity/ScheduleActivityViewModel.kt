@@ -8,7 +8,6 @@ import com.example.schedule.compose.activity.MenuItem
 import com.example.schedule.compose.utils.SettingsStorage
 
 class ScheduleActivityViewModel(
-    val flowLvl: Int,
     val course: Int,
     val group: Int,
     val subgroup: Int

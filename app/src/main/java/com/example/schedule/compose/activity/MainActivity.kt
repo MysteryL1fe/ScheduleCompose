@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.schedule.compose.R
 import com.example.schedule.compose.repo.FlowRepo
+import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.ui.theme.ScheduleComposeTheme
 import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.view.model.ThemeManager
@@ -61,8 +62,10 @@ class MainActivity : ComponentActivity() {
 
         val curFlow = SettingsStorage.getCurFlow(saves)
 
-        viewModel = MainActivityViewModel(FlowRepo(this), saves, this)
-        viewModel.flowLvl = curFlow.flowLvl
+        var scheduleDBHelper = ScheduleDBHelper(this)
+
+        viewModel = MainActivityViewModel(FlowRepo(scheduleDBHelper), saves, this)
+        viewModel.educationLevel = curFlow.educationLevel
         viewModel.course = curFlow.course
         viewModel.group = curFlow.group
         viewModel.subgroup = curFlow.subgroup
@@ -135,7 +138,7 @@ private fun FlowLvlButton(viewModel: MainActivityViewModel) {
     val flowLvlStr = listOf("Бакалавриат/Специалитет", "Магистратура", "Аспирантура")
     TextButton(
         onClick = {
-            viewModel.flowLvl = (viewModel.flowLvl % 3) + 1
+            viewModel.educationLevel = (viewModel.educationLevel % 3) + 1
             viewModel.course = 0
             viewModel.group = 0
             viewModel.subgroup = 0
@@ -144,7 +147,7 @@ private fun FlowLvlButton(viewModel: MainActivityViewModel) {
         colors = buttonColors
     ) {
         Text(
-            text = flowLvlStr[viewModel.flowLvl - 1],
+            text = flowLvlStr[viewModel.educationLevel - 1],
             modifier = Modifier.padding(8.dp),
             color = MaterialTheme.colorScheme.tertiary,
             fontSize = viewModel.textSize,

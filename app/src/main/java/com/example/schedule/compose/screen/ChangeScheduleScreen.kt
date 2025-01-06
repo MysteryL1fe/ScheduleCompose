@@ -2,6 +2,7 @@ package com.example.schedule.compose.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxColors
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,13 +52,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.schedule.compose.R
-import com.example.schedule.compose.entity.Lesson
+import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.view.model.screen.ChangeScheduleScreenViewModel
 
 private lateinit var buttonColors: ButtonColors
 private lateinit var iconButtonColors: IconButtonColors
 private lateinit var textFieldColors: TextFieldColors
+private lateinit var checkboxColors: CheckboxColors
 
 @Composable
 fun ChangeScheduleScreen(
@@ -77,6 +85,11 @@ fun ChangeScheduleScreen(
         focusedIndicatorColor = MaterialTheme.colorScheme.secondary,
         unfocusedIndicatorColor = MaterialTheme.colorScheme.secondary
     )
+    checkboxColors = CheckboxDefaults.colors(
+        checkedColor = MaterialTheme.colorScheme.secondary,
+        uncheckedColor = MaterialTheme.colorScheme.primary,
+        checkmarkColor = MaterialTheme.colorScheme.tertiary
+    )
 
     Column(
         modifier = modifier
@@ -101,7 +114,7 @@ fun ChangeScheduleScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            ChangeLessonsView(viewModel = viewModel)
+            ChangeSchedulesView(viewModel = viewModel)
         }
     }
 
@@ -155,7 +168,7 @@ private fun DayOfWeekPickerDialog(
 }
 
 @Composable
-private fun ChangeLessonsView(
+private fun ChangeSchedulesView(
     viewModel: ChangeScheduleScreenViewModel
 ) {
     Column(
@@ -168,7 +181,7 @@ private fun ChangeLessonsView(
             color = MaterialTheme.colorScheme.secondary
         )
         for (i in 1..8) {
-            ChangeLessonView(
+            ChangeScheduleView(
                 lessonNum = i,
                 viewModel = viewModel
             )
@@ -181,7 +194,7 @@ private fun ChangeLessonsView(
 }
 
 @Composable
-private fun ChangeLessonView(
+private fun ChangeScheduleView(
     lessonNum: Int,
     viewModel: ChangeScheduleScreenViewModel
 ) {
@@ -220,30 +233,24 @@ private fun ChangeLessonView(
                 modifier = Modifier.padding(10.dp, 0.dp)
             )
         }
-        if (viewModel.numerator[lessonNum - 1]?.name?.isNotEmpty() == true
-            && viewModel.denominator[lessonNum - 1]?.name?.isNotEmpty() == true
-            && viewModel.numerator[lessonNum - 1]!!.name == viewModel.denominator[lessonNum - 1]!!.name
-            || viewModel.numerator[lessonNum - 1]?.name.isNullOrEmpty()
-            && viewModel.denominator[lessonNum - 1]?.name.isNullOrEmpty()) {
-            LessonCard(
-                lesson = viewModel.numerator[lessonNum - 1],
+        if (viewModel.numerator[lessonNum - 1]?.subject?.subject?.isNotEmpty() == true
+            && viewModel.denominator[lessonNum - 1]?.subject?.subject?.isNotEmpty() == true
+            && viewModel.numerator[lessonNum - 1]!!.subject.subject == viewModel.denominator[lessonNum - 1]!!.subject.subject
+            || viewModel.numerator[lessonNum - 1]?.subject?.subject.isNullOrEmpty()
+            && viewModel.denominator[lessonNum - 1]?.subject?.subject.isNullOrEmpty()) {
+            ScheduleCard(
+                schedule = viewModel.numerator[lessonNum - 1],
                 isNumerator = true,
                 isDenominator = true,
-                onChangeLesson = { lessonName, teacher, cabinet, isNumerator, isDenominator ->
+                onChangeLesson = { isNumerator, isDenominator, subject, surname, name, patronymic, cabinet, building ->
                     if (isNumerator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, true
-                        )
+                        viewModel.changeLesson(lessonNum, true, subject, surname, name, patronymic, cabinet, building)
                     } else {
-                        viewModel.deleteLesson(
-                            lessonNum, true
-                        )
+                        viewModel.deleteLesson(lessonNum, true)
                     }
 
                     if (isDenominator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, false
-                        )
+                        viewModel.changeLesson(lessonNum, false, subject, surname, name, patronymic, cabinet, building)
                     } else {
                         viewModel.deleteLesson(lessonNum, false)
                     }
@@ -255,23 +262,19 @@ private fun ChangeLessonView(
                 viewModel = viewModel
             )
         } else {
-            LessonCard(
-                lesson = viewModel.numerator[lessonNum - 1],
+            ScheduleCard(
+                schedule = viewModel.numerator[lessonNum - 1],
                 isNumerator = true,
                 isDenominator = false,
-                onChangeLesson = { lessonName, teacher, cabinet, isNumerator, isDenominator ->
+                onChangeLesson = { isNumerator, isDenominator, subject, surname, name, patronymic, cabinet, building ->
                     if (isNumerator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, true
-                        )
+                        viewModel.changeLesson(lessonNum, true, subject, surname, name, patronymic, cabinet, building)
                     } else {
                         viewModel.deleteLesson(lessonNum, true)
                     }
 
                     if (isDenominator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, false
-                        )
+                        viewModel.changeLesson(lessonNum, false, subject, surname, name, patronymic, cabinet, building)
                     }
                 },
                 onDeleteLesson = {
@@ -283,21 +286,17 @@ private fun ChangeLessonView(
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.tertiary
             )
-            LessonCard(
-                lesson = viewModel.denominator[lessonNum - 1],
+            ScheduleCard(
+                schedule = viewModel.denominator[lessonNum - 1],
                 isNumerator = false,
                 isDenominator = true,
-                onChangeLesson = { lessonName, teacher, cabinet, isNumerator, isDenominator ->
+                onChangeLesson = { isNumerator, isDenominator, subject, surname, name, patronymic, cabinet, building ->
                     if (isNumerator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, true
-                        )
+                        viewModel.changeLesson(lessonNum, true, subject, surname, name, patronymic, cabinet, building)
                     }
 
                     if (isDenominator) {
-                        viewModel.changeLesson(
-                            lessonName, teacher, cabinet, lessonNum, false
-                        )
+                        viewModel.changeLesson(lessonNum, false, subject, surname, name, patronymic, cabinet, building)
                     } else {
                         viewModel.deleteLesson(lessonNum, false)
                     }
@@ -312,106 +311,22 @@ private fun ChangeLessonView(
 }
 
 @Composable
-private fun LessonCard(
-    lesson: Lesson?,
-    isNumerator: Boolean,
-    isDenominator: Boolean,
-    onChangeLesson: (lessonName: String, teacher: String, cabinet: String, isNumerator: Boolean, isDenominator: Boolean) -> Unit,
-    onDeleteLesson: () -> Unit,
-    viewModel: ChangeScheduleScreenViewModel
-) {
-    var showChangeLessonDialog by remember { mutableStateOf(false) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        if (lesson != null) {
-            Column {
-                Text(
-                    text = lesson.name,
-                    fontSize = viewModel.textSize,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(20.dp, 0.dp)
-                )
-
-                if (lesson.cabinet?.isNotEmpty() == true || lesson.teacher?.isNotEmpty() == true) {
-                    Text(
-                        text = buildString {
-                            if (lesson.cabinet?.isNotEmpty() == true) {
-                                append(lesson.cabinet)
-                                if (lesson.teacher?.isNotEmpty() == true) append(", ")
-                            }
-                            if (lesson.teacher?.isNotEmpty() == true) append(lesson.teacher)
-                        },
-                        fontSize = viewModel.textSize,
-                        modifier = Modifier.padding(20.dp, 0.dp),
-                        color = MaterialTheme.colorScheme.tertiary
-                    )
-                }
-            }
-        }
-
-        Spacer(
-            modifier = Modifier.weight(1f)
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton (
-                onClick = { showChangeLessonDialog = true },
-                colors = iconButtonColors,
-                modifier = Modifier.padding(0.dp, 10.dp, 10.dp, 10.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_rename),
-                    contentDescription = "Change lesson"
-                )
-            }
-
-            if (lesson != null) {
-                IconButton(
-                    onClick = onDeleteLesson,
-                    colors = iconButtonColors,
-                    modifier = Modifier.padding(0.dp, 10.dp, 10.dp, 10.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_thrash),
-                        contentDescription = "Delete lesson"
-                    )
-                }
-            }
-        }
-    }
-
-    if (showChangeLessonDialog) {
-        ChangeLessonDialog(
-            lesson = lesson,
-            isNumerator = isNumerator,
-            isDenominator = isDenominator,
-            onDismissRequest = { showChangeLessonDialog = false },
-            onDone = { lessonName, teacher, cabinet, numerator, denominator ->
-                onChangeLesson(lessonName, teacher, cabinet, numerator, denominator)
-                showChangeLessonDialog = false
-                     },
-            viewModel = viewModel
-        )
-    }
-}
-
-@Composable
-private fun ChangeLessonDialog(
-    lesson: Lesson?,
+private fun ChangeScheduleDialog(
+    schedule: Schedule?,
     isNumerator: Boolean,
     isDenominator: Boolean,
     onDismissRequest: () -> Unit,
-    onDone: (lessonName: String, teacher: String, cabinet: String, numerator: Boolean, denominator: Boolean) -> Unit,
+    onDone: (isNumerator: Boolean, isDenominator: Boolean, subject: String, surname: String, name: String, patronymic: String, cabinet: String, building: String) -> Unit,
     viewModel: ChangeScheduleScreenViewModel
 ) {
-    var lessonName by remember { mutableStateOf(lesson?.name ?: "") }
-    var teacher by remember { mutableStateOf(lesson?.teacher ?: "") }
-    var cabinet by remember { mutableStateOf(lesson?.cabinet ?: "") }
+    val scrollState = rememberScrollState()
+
+    var subject by remember { mutableStateOf(schedule?.subject?.subject ?: "") }
+    var surname by remember { mutableStateOf(schedule?.teacher?.surname ?: "") }
+    var name by remember { mutableStateOf(schedule?.teacher?.name ?: "") }
+    var patronymic by remember { mutableStateOf(schedule?.teacher?.patronymic ?: "") }
+    var cabinet by remember { mutableStateOf(schedule?.cabinet?.cabinet ?: "") }
+    var building by remember { mutableStateOf(schedule?.cabinet?.cabinet ?: "") }
     var numerator by remember { mutableStateOf(isNumerator) }
     var denominator by remember { mutableStateOf(isDenominator) }
 
@@ -424,48 +339,73 @@ private fun ChangeLessonDialog(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column {
-                TextField(
-                    value = lessonName,
-                    onValueChange = { lessonName = it },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.lesson_name),
-                            fontSize = viewModel.textSize
-                        )
-                    },
-                    singleLine = true,
-                    colors = textFieldColors,
-                    textStyle = TextStyle(fontSize = viewModel.textSize),
+            Column(
+                modifier = Modifier.verticalScroll(scrollState)
+            ) {
+                Text(
+                    text = stringResource(R.string.subject),
+                    fontSize = viewModel.textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-                TextField(
-                    value = teacher,
-                    onValueChange = { teacher = it },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.teacher),
-                            fontSize = viewModel.textSize
-                        )
-                    },
-                    singleLine = true,
-                    colors = textFieldColors,
-                    textStyle = TextStyle(fontSize = viewModel.textSize),
-                    modifier = Modifier.fillMaxWidth()
+                DropdownTextField(
+                    value = subject,
+                    onValueChange = { subject = it },
+                    label = stringResource(R.string.subject),
+                    suggestions = viewModel.subjects.map { it.subject },
+                    viewModel = viewModel
                 )
-                TextField(
+                Text(
+                    text = stringResource(R.string.teacher_optional),
+                    fontSize = viewModel.textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 20.dp)
+                        .fillMaxWidth()
+                )
+                DropdownTextField(
+                    value = surname,
+                    onValueChange = { surname = it },
+                    label = stringResource(R.string.teacher_surname),
+                    suggestions = viewModel.teachers.map { it.surname }.distinct(),
+                    viewModel = viewModel
+                )
+                DropdownTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = stringResource(R.string.teacher_name_optional),
+                    suggestions = viewModel.teachers.filter { it.name != null }.map { it.name!! }.distinct().sorted(),
+                    viewModel = viewModel
+                )
+                DropdownTextField(
+                    value = patronymic,
+                    onValueChange = { patronymic = it },
+                    label = stringResource(R.string.teacher_patronymic_optional),
+                    suggestions = viewModel.teachers.filter { it.patronymic != null }.map { it.patronymic!! }.distinct().sorted(),
+                    viewModel = viewModel
+                )
+                Text(
+                    text = stringResource(R.string.cabinet_optional),
+                    fontSize = viewModel.textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 20.dp)
+                        .fillMaxWidth()
+                )
+                DropdownTextField(
                     value = cabinet,
                     onValueChange = { cabinet = it },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.cabinet),
-                            fontSize = viewModel.textSize
-                        )
-                    },
-                    singleLine = true,
-                    colors = textFieldColors,
-                    textStyle = TextStyle(fontSize = viewModel.textSize),
-                    modifier = Modifier.fillMaxWidth()
+                    label = stringResource(R.string.cabinet),
+                    suggestions = viewModel.cabinets.map { it.cabinet }.distinct(),
+                    viewModel = viewModel
+                )
+                DropdownTextField(
+                    value = building,
+                    onValueChange = { building = it },
+                    label = stringResource(R.string.building_optional),
+                    suggestions = viewModel.cabinets.filter { it.building != null }.map { it.building!! }.distinct().sorted(),
+                    viewModel = viewModel
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -480,7 +420,8 @@ private fun ChangeLessonDialog(
                 ) {
                     Checkbox(
                         checked = numerator,
-                        onCheckedChange = null
+                        onCheckedChange = null,
+                        colors = checkboxColors
                     )
                     Text(
                         text = stringResource(R.string.numerator),
@@ -502,7 +443,8 @@ private fun ChangeLessonDialog(
                 ) {
                     Checkbox(
                         checked = denominator,
-                        onCheckedChange = null
+                        onCheckedChange = null,
+                        colors = checkboxColors
                     )
                     Text(
                         text = stringResource(R.string.denominator),
@@ -528,8 +470,8 @@ private fun ChangeLessonDialog(
                     )
                     TextButton(
                         onClick = {
-                            if (lessonName.isNotBlank() && (numerator || denominator)) {
-                                onDone(lessonName.trim(), teacher.trim(), cabinet.trim(), numerator, denominator)
+                            if (subject.isNotBlank() && (surname.isNotBlank() || name.isBlank() && patronymic.isBlank()) && (cabinet.isNotBlank() || building.isBlank()) && (numerator || denominator)) {
+                                onDone(numerator, denominator, subject.trim(), surname.trim(), name.trim(), patronymic.trim(), cabinet.trim(), building.trim())
                             }
                         },
                         colors = buttonColors,
@@ -541,6 +483,165 @@ private fun ChangeLessonDialog(
                             fontSize = viewModel.textSize
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleCard(
+    schedule: Schedule?,
+    isNumerator: Boolean,
+    isDenominator: Boolean,
+    onChangeLesson: (isNumerator: Boolean, isDenominator: Boolean, subject: String, surname: String, name: String, patronymic: String, cabinet: String, building: String) -> Unit,
+    onDeleteLesson: () -> Unit,
+    viewModel: ChangeScheduleScreenViewModel
+) {
+    var showChangeLessonDialog by remember { mutableStateOf(false) }
+
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+            .padding(bottom = 10.dp)
+    ) {
+        if (schedule != null) {
+            Column(
+                modifier = Modifier.weight(0.75f)
+            ) {
+                Text(
+                    text = schedule.subject.subject,
+                    fontSize = viewModel.textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(20.dp, 0.dp)
+                )
+
+                if (schedule.teacher?.surname?.isNotEmpty() == true) {
+                    Text(
+                        text = buildString {
+                            append(schedule.teacher!!.surname)
+                            if (schedule.teacher!!.name?.isNotEmpty() == true) {
+                                append(" ${schedule.teacher!!.name}")
+                            }
+                            if (schedule.teacher!!.patronymic?.isNotEmpty() == true) {
+                                append(" ${schedule.teacher!!.patronymic}")
+                            }
+                        },
+                        fontSize = viewModel.textSize,
+                        modifier = Modifier.padding(20.dp, 0.dp),
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+
+                if (schedule.cabinet?.cabinet?.isNotEmpty() == true) {
+                    Text(
+                        text = buildString {
+                            append(schedule.cabinet!!.cabinet)
+                            if (schedule.cabinet?.building?.isNotEmpty() == true) {
+                                append(", корпус ${schedule.cabinet!!.building}")
+                            }
+                            if (schedule.cabinet!!.address?.isNotEmpty() == true) {
+                                append(", ${schedule.cabinet!!.address}")
+                            }
+                        },
+                        fontSize = viewModel.textSize,
+                        modifier = Modifier.padding(20.dp, 0.dp),
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(0.25f)
+        ) {
+            IconButton (
+                onClick = { showChangeLessonDialog = true },
+                colors = iconButtonColors,
+                modifier = Modifier.padding(0.dp, 10.dp, 10.dp, 10.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_rename),
+                    contentDescription = "Change lesson"
+                )
+            }
+
+            if (schedule != null) {
+                IconButton(
+                    onClick = onDeleteLesson,
+                    colors = iconButtonColors,
+                    modifier = Modifier.padding(0.dp, 10.dp, 10.dp, 10.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_thrash),
+                        contentDescription = "Delete lesson"
+                    )
+                }
+            }
+        }
+    }
+
+    if (showChangeLessonDialog) {
+        ChangeScheduleDialog(
+            schedule = schedule,
+            isNumerator = isNumerator,
+            isDenominator = isDenominator,
+            onDismissRequest = { showChangeLessonDialog = false },
+            onDone = { numerator, denominator, subject, surname, name, patronymic, cabinet, building ->
+                onChangeLesson(numerator, denominator, subject, surname, name, patronymic, cabinet, building)
+                showChangeLessonDialog = false
+            },
+            viewModel = viewModel
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DropdownTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    suggestions: List<String>,
+    viewModel: ChangeScheduleScreenViewModel
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = {
+                Text(
+                    text = label,
+                    fontSize = viewModel.textSize
+                )
+            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            singleLine = true,
+            colors = textFieldColors,
+            textStyle = TextStyle(fontSize = viewModel.textSize),
+            modifier = Modifier.menuAnchor()
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            suggestions.forEach { suggestion ->
+                if (suggestion.startsWith(value, ignoreCase = true)) {
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            onValueChange(suggestion)
+                            expanded = false
+                        }
+                    )
                 }
             }
         }

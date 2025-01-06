@@ -18,7 +18,7 @@ class MainActivityViewModel(
     private val saves: SharedPreferences,
     private val context: Context
 ) : ViewModel() {
-    var flowLvl by mutableIntStateOf(1)
+    var educationLevel by mutableIntStateOf(1)
     var course by mutableIntStateOf(0)
     var group by mutableIntStateOf(0)
     var subgroup by mutableIntStateOf(0)
@@ -37,14 +37,14 @@ class MainActivityViewModel(
     }
 
     fun chooseCourse() {
-        val courses = flowRepo.findDistinctActiveCourseByFlowLvl(flowLvl)
+        val courses = flowRepo.findDistinctActiveCourseByEducationLevel(educationLevel)
         items.clear()
         courses.forEach { items.add(it.toString()) }
         items.add("...")
         showChooseCourseDialog = true
     }
 
-    fun onCourseChosen(index: Int, item: String): Unit {
+    fun onCourseChosen(index: Int, item: String) {
         if (item == "...") {
             showNewCourseDialog = true
         } else {
@@ -64,7 +64,7 @@ class MainActivityViewModel(
 
     fun chooseGroup() {
         if (course > 0) {
-            val groups = flowRepo.findDistinctActiveFlowByFlowLvlAndCourse(flowLvl, course)
+            val groups = flowRepo.findDistinctActiveGroupByEducationLevelAndCourse(educationLevel, course)
             items.clear()
             groups.forEach { items.add(it.toString()) }
             items.add("...")
@@ -90,8 +90,8 @@ class MainActivityViewModel(
 
     fun chooseSubgroup() {
         if (group > 0) {
-            val subgroups = flowRepo.findDistinctActiveSubgroupByFlowLvlAndCourseAndFlow(
-                flowLvl,
+            val subgroups = flowRepo.findDistinctActiveSubgroupByEducationLevelAndCourseAndGroup(
+                educationLevel,
                 course,
                 group
             )
@@ -117,25 +117,25 @@ class MainActivityViewModel(
     }
 
     fun onContinue() {
-        if (flowLvl in 1..3 && course in 1..5 && group > 0 && subgroup > 0) {
+        if (educationLevel in 1..3 && course in 1..5 && group > 0 && subgroup > 0) {
             val intent = Intent(context, ScheduleActivity::class.java)
 
-            intent.putExtra("flowLvl", flowLvl)
+            intent.putExtra("educationLevel", educationLevel)
             intent.putExtra("course", course)
             intent.putExtra("group", group)
             intent.putExtra("subgroup", subgroup)
-            val flow = flowRepo.findByFlowLvlAndCourseAndFlowAndSubgroup(
-                flowLvl, course, group, subgroup
+            val flow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(
+                educationLevel, course, group, subgroup
             )
-            if (flow == null) flowRepo.add(flowLvl, course, group, subgroup)
+            if (flow == null) flowRepo.add(educationLevel, course, group, subgroup)
             else if (!flow.active!!) flowRepo.update(
-                flowLvl,
+                educationLevel,
                 course,
                 group,
                 subgroup,
                 true
             )
-            SettingsStorage.saveCurFlow(flowLvl, course, group, subgroup, saves)
+            SettingsStorage.saveCurFlow(educationLevel, course, group, subgroup, saves)
             context.startActivity(intent)
         }
     }

@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class Flow(
     var id: Long?,
-    var flowLvl: Int,
+    var educationLevel: Int,
     var course: Int,
     var group: Int,
     var subgroup: Int,
@@ -15,5 +15,6 @@ data class Flow(
     var sessionEndDate: LocalDate?,
     var active: Boolean?
 ) {
-    constructor(flowLvl: Int, course: Int, flow: Int, subgroup: Int) : this(null, flowLvl, course, flow, subgroup, null, null, null, null, null)
+    constructor(educationLevel: Int, course: Int, flow: Int, subgroup: Int) : this(null, educationLevel, course, flow, subgroup, null, null, null, null, null)
+    constructor(id: Long?, educationLevel: Int, course: Int, flow: Int, subgroup: Int) : this(id, educationLevel, course, flow, subgroup, null, null, null, null, null)
 }

@@ -31,10 +31,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
+import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
-import com.example.schedule.compose.repo.LessonRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.ScheduleRepo
+import com.example.schedule.compose.repo.SubjectRepo
+import com.example.schedule.compose.repo.TeacherRepo
 import com.example.schedule.compose.screen.ChangeScheduleScreen
 import com.example.schedule.compose.screen.ScheduleScreen
 import com.example.schedule.compose.screen.SettingsScreen
@@ -51,21 +53,23 @@ class ScheduleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val flowLvl = intent.getIntExtra("flowLvl", 0)
+        val educationLevel = intent.getIntExtra("educationLevel", 1)
         val course = intent.getIntExtra("course", 1)
         val group = intent.getIntExtra("group", 1)
         val subgroup = intent.getIntExtra("subgroup", 1)
 
         val scheduleDBHelper = ScheduleDBHelper(this)
         val flowRepo = FlowRepo(scheduleDBHelper)
-        val lessonRepo = LessonRepo(scheduleDBHelper)
-        val scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, lessonRepo)
+        val subjectRepo = SubjectRepo(scheduleDBHelper)
+        val teacherRepo = TeacherRepo(scheduleDBHelper)
+        val cabinetRepo = CabinetRepo(scheduleDBHelper)
+        val scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
 
         val saves = getSharedPreferences(SettingsStorage.SCHEDULE_SAVES, MODE_PRIVATE)
 
-        val scheduleActivityViewModel = ScheduleActivityViewModel(flowLvl, course, group, subgroup)
-        val scheduleScreenViewModel = ScheduleScreenViewModel(lessonRepo, scheduleRepo, flowLvl, course, group, subgroup)
-        val changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(lessonRepo, scheduleRepo, flowLvl, course, group, subgroup)
+        val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
+        val scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, educationLevel, course, group, subgroup)
+        val changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
         setContent {
@@ -133,9 +137,7 @@ fun ScheduleApp(
                     viewModel = viewModel,
                     onClick = {
                         scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
-                            }
+                            drawerState.open()
                         }
                     }
                 )
@@ -249,7 +251,7 @@ private fun ScheduleTopBar(onClick: () -> Unit, viewModel: ScheduleActivityViewM
     TopAppBar(
         title = {
             Text(
-                text = "Группа ${viewModel.course}.${viewModel.subgroup}.${viewModel.subgroup}",
+                text = "Группа ${viewModel.course}.${viewModel.group}.${viewModel.subgroup}",
                 fontSize = viewModel.textSize,
                 modifier = Modifier.padding(8.dp)
             )
