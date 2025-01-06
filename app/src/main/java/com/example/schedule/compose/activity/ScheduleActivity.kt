@@ -41,6 +41,7 @@ import com.example.schedule.compose.repo.SubjectRepo
 import com.example.schedule.compose.repo.TeacherRepo
 import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.screen.ChangeScheduleScreen
+import com.example.schedule.compose.screen.FindTeacherScreen
 import com.example.schedule.compose.screen.ScheduleScreen
 import com.example.schedule.compose.screen.SettingsScreen
 import com.example.schedule.compose.theme.ScheduleComposeTheme
@@ -48,6 +49,7 @@ import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.view.model.activity.ScheduleActivityViewModel
 import com.example.schedule.compose.view.model.screen.ChangeScheduleScreenViewModel
+import com.example.schedule.compose.view.model.screen.FindTeacherScreenViewModel
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.SettingsScreenViewModel
 import kotlinx.coroutines.launch
@@ -88,6 +90,7 @@ class ScheduleActivity : ComponentActivity() {
         val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
         scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, educationLevel, course, group, subgroup)
         changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
+        val findTeacherScreenViewModel = FindTeacherScreenViewModel()
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
         setContent {
@@ -98,6 +101,7 @@ class ScheduleActivity : ComponentActivity() {
                     scheduleActivityViewModel,
                     scheduleScreenViewModel,
                     changeScheduleScreenViewModel,
+                    findTeacherScreenViewModel,
                     settingsScreenViewModel
                 )
             }
@@ -146,6 +150,7 @@ fun ScheduleApp(
     viewModel: ScheduleActivityViewModel,
     scheduleScreenViewModel: ScheduleScreenViewModel,
     changeScheduleScreenViewModel: ChangeScheduleScreenViewModel,
+    findTeacherScreenViewModel: FindTeacherScreenViewModel,
     settingsScreenViewModel: SettingsScreenViewModel
 ) {
     navigationDrawerItemColors = NavigationDrawerItemDefaults.colors(
@@ -197,6 +202,12 @@ fun ScheduleApp(
                     changeScheduleScreenViewModel.update()
                     ChangeScheduleScreen(
                         viewModel = changeScheduleScreenViewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+                MenuItem.FIND_TEACHER -> {
+                    FindTeacherScreen(
+                        viewModel = findTeacherScreenViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

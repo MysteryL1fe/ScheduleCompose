@@ -1,6 +1,9 @@
 package com.example.schedule.compose.utils
 
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 object Utils {
     val daysOfWeekNames = arrayOf(
@@ -8,12 +11,6 @@ object Utils {
     )
     val lessonsBeginning = listOf("8:00", "9:45", "11:30", "13:25", "15:10", "16:55", "18:40", "20:10")
     val lessonsEnding = listOf("9:35", "11:20", "13:05", "15:00", "16:45", "18:30", "20:00", "21:30")
-
-    // Determine if a given date (year, month, day) is a numerator day
-    fun isNumerator(year: Int, month: Int, day: Int): Boolean {
-        val date = LocalDate.of(year, month, day)
-        return isNumerator(date)
-    }
 
     // Check if the given date is a numerator day
     fun isNumerator(date: LocalDate): Boolean {
@@ -28,5 +25,18 @@ object Utils {
         } else {
             ((date.toEpochDay() - prevYear.toEpochDay()) / 7 % 2).toInt() == 0
         }
+    }
+
+    fun getNearestLesson(dayOfWeek: Int, lessonNum: Int, numerator: Boolean, from: LocalDateTime): LocalDateTime {
+        val fromDate = from.toLocalDate()
+        val thisWeek = (fromDate.dayOfWeek.value < dayOfWeek || fromDate.dayOfWeek.value == dayOfWeek && from.toLocalTime().isBefore(
+            LocalTime.parse(lessonsBeginning[lessonNum - 1], DateTimeFormatter.ofPattern("H[H]:mm"))
+        ))
+        var result = LocalDateTime.of(
+            LocalDate.ofEpochDay(fromDate.toEpochDay() + dayOfWeek - from.dayOfWeek.value + if (thisWeek) 0 else 7),
+            LocalTime.parse(lessonsBeginning[lessonNum - 1], DateTimeFormatter.ofPattern("H[H]:mm"))
+        )
+        if (isNumerator(result.toLocalDate()) != numerator) result = result.plusDays(7)
+        return result
     }
 }

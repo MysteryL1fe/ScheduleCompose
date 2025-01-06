@@ -62,8 +62,7 @@ class RetrofitService private constructor() {
             }
 
             override fun onFailure(call: Call<Flow>, e: Throwable) {
-                Log.e(TAG, "Receive active flows failure")
-                Log.e(TAG, e.message.toString())
+                Log.e(TAG, "Receive flow failure")
             }
         })
     }
@@ -79,7 +78,6 @@ class RetrofitService private constructor() {
 
             override fun onFailure(call: Call<List<Flow>>, e: Throwable) {
                 Log.e(TAG, "Receive active flows failure")
-                Log.e(TAG, e.message.toString())
             }
         })
     }
@@ -94,7 +92,7 @@ class RetrofitService private constructor() {
             }
 
             override fun onFailure(p0: Call<List<Subject>>, p1: Throwable) {
-                Log.d(TAG, "Receive active flows failure")
+                Log.e(TAG, "Receive subjects failure")
             }
         })
     }
@@ -109,7 +107,7 @@ class RetrofitService private constructor() {
             }
 
             override fun onFailure(p0: Call<List<Teacher>>, p1: Throwable) {
-                Log.d(TAG, "Receive active flows failure")
+                Log.e(TAG, "Receive teachers failure")
             }
         })
     }
@@ -124,7 +122,7 @@ class RetrofitService private constructor() {
             }
 
             override fun onFailure(p0: Call<List<Cabinet>>, p1: Throwable) {
-                Log.d(TAG, "Receive active flows failure")
+                Log.e(TAG, "Receive cabinets failure")
             }
         })
     }
@@ -139,7 +137,25 @@ class RetrofitService private constructor() {
             }
 
             override fun onFailure(p0: Call<List<Schedule>>, p1: Throwable) {
-                Log.d(TAG, "Receive active flows failure")
+                Log.e(TAG, "Receive schedules by flow failure")
+            }
+        })
+    }
+
+    fun getAllSchedulesByTeacher(surname: String, name: String, patronymic: String, onSuccess: (List<Schedule>) -> Unit, onFailure: () -> Unit) {
+        val call = scheduleService.getAllByTeacher(surname, name, patronymic)
+        call.enqueue(object : Callback<List<Schedule>> {
+            override fun onResponse(call: Call<List<Schedule>>, response: Response<List<Schedule>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess)
+                } else {
+                    onFailure()
+                }
+            }
+
+            override fun onFailure(p0: Call<List<Schedule>>, p1: Throwable) {
+                Log.e(TAG, "Receive schedules by teacher failure")
+                onFailure()
             }
         })
     }

@@ -20,7 +20,9 @@
     <string name="teacher">Преподаватель</string>
     <string name="teacher_optional">Преподаватель (опционально)</string>
     <string name="teacher_surname">Фамилия преподавателя</string>
+    <string name="teacher_name">Имя преподавателя</string>
     <string name="teacher_name_optional">Имя преподавателя (опционально)</string>
+    <string name="teacher_patronymic">Отчество преподавателя</string>
     <string name="teacher_patronymic_optional">Отчество преподавателя (опционально)</string>
     <string name="subject">Название предмета</string>
     <string name="cabinet">Кабинет</string>
