@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.schedule.compose.R
-import com.example.schedule.compose.ui.theme.Theme
+import com.example.schedule.compose.theme.Theme
 import com.example.schedule.compose.view.model.screen.SettingsScreenViewModel
 
 private lateinit var buttonColors: ButtonColors

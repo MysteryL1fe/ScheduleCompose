@@ -8,9 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.lifecycle.ViewModel
 import com.example.schedule.compose.repo.ScheduleDBHelper
-import com.example.schedule.compose.ui.theme.Theme
+import com.example.schedule.compose.theme.Theme
+import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
-import com.example.schedule.compose.view.model.ThemeManager
 import com.example.schedule.compose.view.model.activity.ScheduleActivityViewModel
 
 class SettingsScreenViewModel (

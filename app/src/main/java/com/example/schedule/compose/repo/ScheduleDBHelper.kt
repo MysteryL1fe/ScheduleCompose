@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 class ScheduleDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 1
         const val DATABASE_NAME = "schedule"
     }
 
@@ -16,7 +16,7 @@ class ScheduleDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
             CREATE TABLE IF NOT EXISTS flow (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 education_level INTEGER NOT NULL CHECK (education_level >= 1 AND education_level <= 3),
-                course INTEGER NOT NULL CHECK (course > 0 AND course <= 5),
+                course INTEGER NOT NULL CHECK (course > 0 AND course <= 6),
                 _group INTEGER NOT NULL CHECK (_group > 0),
                 subgroup INTEGER NOT NULL CHECK (subgroup > 0),
                 last_edit TEXT NOT NULL,

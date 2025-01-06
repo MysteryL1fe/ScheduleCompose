@@ -43,15 +43,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.example.schedule.compose.R
+import com.example.schedule.compose.entity.Cabinet
+import com.example.schedule.compose.entity.Flow
+import com.example.schedule.compose.entity.Subject
+import com.example.schedule.compose.entity.Teacher
+import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
-import com.example.schedule.compose.ui.theme.ScheduleComposeTheme
+import com.example.schedule.compose.repo.SubjectRepo
+import com.example.schedule.compose.repo.TeacherRepo
+import com.example.schedule.compose.retrofit.RetrofitService
+import com.example.schedule.compose.theme.ScheduleComposeTheme
+import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
-import com.example.schedule.compose.view.model.ThemeManager
 import com.example.schedule.compose.view.model.activity.MainActivityViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainActivityViewModel
+    private lateinit var flowRepo: FlowRepo
+    private lateinit var subjectRepo: SubjectRepo
+    private lateinit var teacherRepo: TeacherRepo
+    private lateinit var cabinetRepo: CabinetRepo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,9 +74,21 @@ class MainActivity : ComponentActivity() {
 
         val curFlow = SettingsStorage.getCurFlow(saves)
 
-        var scheduleDBHelper = ScheduleDBHelper(this)
+        val scheduleDBHelper = ScheduleDBHelper(this)
+        flowRepo = FlowRepo(scheduleDBHelper)
+        subjectRepo = SubjectRepo(scheduleDBHelper)
+        teacherRepo = TeacherRepo(scheduleDBHelper)
+        cabinetRepo = CabinetRepo(scheduleDBHelper)
 
-        viewModel = MainActivityViewModel(FlowRepo(scheduleDBHelper), saves, this)
+        if (SettingsStorage.useServer) {
+            val retrofitService = RetrofitService.getInstance()
+            retrofitService.getAllActiveFlows(::updateFlows)
+            retrofitService.getAllSubjects(::updateSubjects)
+            retrofitService.getAllTeachers(::updateTeachers)
+            retrofitService.getAllCabinets(::updateCabinets)
+        }
+
+        viewModel = MainActivityViewModel(flowRepo, saves, this)
         viewModel.educationLevel = curFlow.educationLevel
         viewModel.course = curFlow.course
         viewModel.group = curFlow.group
@@ -83,6 +107,50 @@ class MainActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
         viewModel.update()
+    }
+
+    private fun updateFlows(flows: List<Flow>) {
+        val curFlows = flowRepo.findAll()
+        flows.filter { flow -> curFlows.any { it.educationLevel == flow.educationLevel && it.course == flow.course && it.group == flow.group && it.subgroup == flow.subgroup && (it.lessonsStartDate != flow.lessonsStartDate || it.sessionStartDate != flow.sessionStartDate || it.sessionEndDate != flow.sessionEndDate || it.active != flow.active) } }.forEach {
+            flowRepo.update(it.educationLevel, it.course, it.group, it.subgroup, it.lessonsStartDate, it.sessionStartDate, it.sessionEndDate, it.active!!)
+        }
+        flows.filter { flow -> curFlows.none { it.educationLevel == flow.educationLevel && it.course == flow.course && it.group == flow.group && it.subgroup == flow.subgroup } }.forEach {
+            flowRepo.add(
+                educationLevel = it.educationLevel,
+                course = it.course,
+                group = it.group,
+                subgroup = it.subgroup,
+                lessonsStartDate = it.lessonsStartDate,
+                sessionStartDate = it.sessionStartDate,
+                sessionEndDate = it.sessionEndDate,
+                active = it.active!!
+            )
+        }
+        viewModel.update()
+    }
+
+    private fun updateSubjects(subjects: List<Subject>) {
+        val curSubjects = subjectRepo.findAll()
+        subjects.filter { subject -> curSubjects.none { it.subject == subject.subject } }.forEach {
+            subjectRepo.add(it.subject)
+        }
+    }
+
+    private fun updateTeachers(teachers: List<Teacher>) {
+        val curTeachers = teacherRepo.findAll()
+        teachers.filter { teacher -> curTeachers.none { it.surname == teacher.surname && it.name == teacher.name && it.patronymic == teacher.patronymic } }.forEach {
+            teacherRepo.add(it.surname, it.name, it.patronymic)
+        }
+    }
+
+    private fun updateCabinets(cabinets: List<Cabinet>) {
+        val curCabinets = cabinetRepo.findAll()
+        cabinets.filter { cabinet -> curCabinets.any { it.cabinet == cabinet.cabinet && it.building == cabinet.building && it.address != cabinet.address } }.forEach {
+            cabinetRepo.update(it.cabinet, it.building, it.address)
+        }
+        cabinets.filter { cabinet -> curCabinets.none { it.cabinet == cabinet.cabinet && it.building == cabinet.building } }.forEach {
+            cabinetRepo.add(it.cabinet, it.building, it.address)
+        }
     }
 }
 

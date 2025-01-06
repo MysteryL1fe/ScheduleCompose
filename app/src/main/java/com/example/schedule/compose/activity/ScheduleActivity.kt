@@ -31,45 +31,63 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
+import com.example.schedule.compose.entity.Flow
+import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.ScheduleRepo
 import com.example.schedule.compose.repo.SubjectRepo
 import com.example.schedule.compose.repo.TeacherRepo
+import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.screen.ChangeScheduleScreen
 import com.example.schedule.compose.screen.ScheduleScreen
 import com.example.schedule.compose.screen.SettingsScreen
-import com.example.schedule.compose.ui.theme.ScheduleComposeTheme
+import com.example.schedule.compose.theme.ScheduleComposeTheme
+import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
-import com.example.schedule.compose.view.model.ThemeManager
 import com.example.schedule.compose.view.model.activity.ScheduleActivityViewModel
 import com.example.schedule.compose.view.model.screen.ChangeScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.SettingsScreenViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class ScheduleActivity : ComponentActivity() {
+    private var educationLevel = 1
+    private var course = 1
+    private var group = 1
+    private var subgroup = 1
+    private lateinit var flowRepo: FlowRepo
+    private lateinit var scheduleRepo: ScheduleRepo
+    private lateinit var retrofitService: RetrofitService
+    private lateinit var scheduleScreenViewModel: ScheduleScreenViewModel
+    private lateinit var changeScheduleScreenViewModel: ChangeScheduleScreenViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val educationLevel = intent.getIntExtra("educationLevel", 1)
-        val course = intent.getIntExtra("course", 1)
-        val group = intent.getIntExtra("group", 1)
-        val subgroup = intent.getIntExtra("subgroup", 1)
+        educationLevel = intent.getIntExtra("educationLevel", 1)
+        course = intent.getIntExtra("course", 1)
+        group = intent.getIntExtra("group", 1)
+        subgroup = intent.getIntExtra("subgroup", 1)
 
         val scheduleDBHelper = ScheduleDBHelper(this)
-        val flowRepo = FlowRepo(scheduleDBHelper)
+        flowRepo = FlowRepo(scheduleDBHelper)
         val subjectRepo = SubjectRepo(scheduleDBHelper)
         val teacherRepo = TeacherRepo(scheduleDBHelper)
         val cabinetRepo = CabinetRepo(scheduleDBHelper)
-        val scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
+        scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
 
         val saves = getSharedPreferences(SettingsStorage.SCHEDULE_SAVES, MODE_PRIVATE)
 
+        if (SettingsStorage.useServer) {
+            retrofitService = RetrofitService.getInstance()
+            retrofitService.getFlow(educationLevel, course, group, subgroup, ::updateFlow)
+        }
+
         val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
-        val scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, educationLevel, course, group, subgroup)
-        val changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
+        scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, educationLevel, course, group, subgroup)
+        changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
         setContent {
@@ -84,6 +102,28 @@ class ScheduleActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    private fun updateFlow(flow: Flow) {
+        if (flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup)?.lastEdit?.isBefore(flow.lastEdit) != false) {
+            retrofitService.getAllSchedulesByFlow(educationLevel, course, group, subgroup, ::updateSchedules)
+        }
+    }
+
+    private fun updateSchedules(schedules: List<Schedule>) {
+        val curSchedules = scheduleRepo.findAllByFlow(educationLevel, course, group, subgroup)
+        curSchedules.filter { schedule -> schedules.none { it.dayOfWeek == schedule.dayOfWeek && it.lessonNum == schedule.lessonNum && it.numerator == schedule.numerator } }.forEach {
+            scheduleRepo.deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(it.flow.educationLevel, it.flow.course, it.flow.group, it.flow.subgroup, it.dayOfWeek, it.lessonNum, it.numerator)
+        }
+        schedules.filter { schedule -> curSchedules.any { it.dayOfWeek == schedule.dayOfWeek && it.lessonNum == schedule.lessonNum && it.numerator == schedule.numerator && (it.subject.subject != schedule.subject.subject || it.teacher?.surname != schedule.teacher?.surname || it.teacher?.name != schedule.teacher?.name || it.teacher?.patronymic != schedule.teacher?.patronymic || it.cabinet?.cabinet != schedule.cabinet?.cabinet || it.cabinet?.building != schedule.cabinet?.building) } }.forEach {
+            scheduleRepo.update(educationLevel, course, group, subgroup, it.dayOfWeek, it.lessonNum, it.numerator, it.subject.subject, it.teacher?.surname, it.teacher?.name, it.teacher?.patronymic, it.cabinet?.cabinet, it.cabinet?.building)
+        }
+        schedules.filter { schedule -> curSchedules.none { it.dayOfWeek == schedule.dayOfWeek && it.lessonNum == schedule.lessonNum && it.numerator == schedule.numerator } }.forEach {
+            scheduleRepo.add(educationLevel, course, group, subgroup, it.dayOfWeek, it.lessonNum, it.numerator, it.subject.subject, it.teacher?.surname, it.teacher?.name, it.teacher?.patronymic, it.cabinet?.cabinet, it.cabinet?.building)
+        }
+        flowRepo.update(educationLevel, course, group, subgroup, LocalDateTime.now())
+        scheduleScreenViewModel.update()
+        changeScheduleScreenViewModel.update()
     }
 }
 

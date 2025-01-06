@@ -1,4 +1,4 @@
-package com.example.schedule.compose.ui.theme
+package com.example.schedule.compose.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +33,6 @@ fun ScheduleComposeTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
         content = content
     )
 }

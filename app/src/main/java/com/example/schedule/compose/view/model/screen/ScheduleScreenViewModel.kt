@@ -21,7 +21,7 @@ class ScheduleScreenViewModel(
     var date = mutableStateOf(LocalDate.now())
     val schedules = mutableStateListOf<MutableList<Schedule?>>().apply {
         for (i in 0..13) {
-            add(arrayOfNulls<Schedule?>(8).toMutableList())
+            add(mutableStateListOf<Schedule?>(null, null, null, null, null, null, null, null))
         }
     }
     var textSize by mutableStateOf(SettingsStorage.textSize)

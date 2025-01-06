@@ -40,8 +40,6 @@
     <string name="flow_lvl_0">Бакалавриат/Специалитет</string>
     <string name="flow_lvl_1">Магистратура</string>
     <string name="flow_lvl_2">Аспирантура</string>
-    <string name="import_schedule">Импортировать расписание</string>
-    <string name="export_schedule">Экспортировать расписание</string>
     <string name="schedule_exported">Файл успешно добавлен в Загрузки</string>
     <string name="new_course">Новый курс</string>
     <string name="new_group">Новая группа</string>

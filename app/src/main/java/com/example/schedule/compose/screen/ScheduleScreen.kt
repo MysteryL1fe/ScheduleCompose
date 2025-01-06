@@ -16,7 +16,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.schedule.compose.R
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
@@ -28,12 +30,20 @@ fun ScheduleScreen(
     viewModel: ScheduleScreenViewModel,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
-        itemsIndexed(viewModel.schedules) { index, schedules ->
-            if (viewModel.displayModeFull || (schedules.size > 0 && schedules.stream().anyMatch {it != null} )) {
+    val displayedSchedules = viewModel.schedules.filter { viewModel.displayModeFull || (it.size > 0 && it.stream().anyMatch { schedule -> schedule != null } ) }
+    if (displayedSchedules.isEmpty()) {
+        Text(
+            text = stringResource(R.string.lessons_not_founded),
+            color = MaterialTheme.colorScheme.tertiary,
+            fontSize = viewModel.textSize,
+            modifier = modifier
+        )
+    } else {
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+        ) {
+            itemsIndexed(displayedSchedules) { index, schedules ->
                 SchedulesView(
                     schedules = schedules,
                     startDate = viewModel.date.value,

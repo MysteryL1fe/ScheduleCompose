@@ -4,7 +4,7 @@ import android.content.SharedPreferences
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.example.schedule.compose.entity.Flow
-import com.example.schedule.compose.ui.theme.Theme
+import com.example.schedule.compose.theme.Theme
 
 object SettingsStorage {
     private const val VERSION = 1.00011f
@@ -15,8 +15,6 @@ object SettingsStorage {
     var displayModeFull = false
         private set
     var useServer = true
-        private set
-    var backendBaseUrl = "http://192.168.1.128:8080"
         private set
 
     fun init(saves: SharedPreferences) {

@@ -1,6 +1,5 @@
-package com.example.schedule.compose.view.model
+package com.example.schedule.compose.theme
 
-import com.example.schedule.compose.ui.theme.Theme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

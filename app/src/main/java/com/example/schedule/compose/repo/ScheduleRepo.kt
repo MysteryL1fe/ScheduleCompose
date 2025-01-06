@@ -157,8 +157,13 @@ class ScheduleRepo(
 
     @SuppressLint("Range")
     fun findByFlowAndDayOfWeekAndLessonNumAndNumerator(
-        educationLevel: Int, course: Int, group: Int, subgroup: Int,
-        dayOfWeek: Int, lessonNum: Int, numerator: Boolean
+        educationLevel: Int,
+        course: Int,
+        group: Int,
+        subgroup: Int,
+        dayOfWeek: Int,
+        lessonNum: Int,
+        numerator: Boolean
     ): Schedule? {
         var result: Schedule? = null
 
@@ -203,6 +208,66 @@ class ScheduleRepo(
                 if (teacherId == 0L) null else Teacher(teacherId, surname, name, patronymic),
                 if (cabinetId == 0L) null else Cabinet(cabinetId, cabinet, building, address)
             )
+        }
+        cursor.close()
+        db.close()
+        return result
+    }
+
+    @SuppressLint("Range")
+    fun findAllByFlow(
+        educationLevel: Int,
+        course: Int,
+        group: Int,
+        subgroup: Int
+    ): List<Schedule> {
+        val result = mutableListOf<Schedule>()
+
+        val sql = """
+            SELECT sch.id AS schedule_id, sch.flow AS flow_id, sch.subject AS subject_id, sch.teacher AS teacher_id, sch.cabinet AS cabinet_id,
+                sch.day_of_week, sch.lesson_num, sch.numerator,
+                sub.subject, t.surname, t.name, t.patronymic, c.cabinet, c.building, c.address
+            FROM schedule sch
+            JOIN flow f ON sch.flow = f.id
+            JOIN subject sub ON sch.subject = sub.id
+            LEFT JOIN teacher t ON sch.teacher = t.id
+            LEFT JOIN cabinet c ON sch.cabinet = c.id
+            WHERE education_level=? AND course=? AND _group=? AND subgroup=?
+        """.trimIndent()
+        val selectionArgs = arrayOf(educationLevel.toString(), course.toString(), group.toString(), subgroup.toString())
+        val db = dbHelper.readableDatabase
+        val cursor: Cursor = db.rawQuery(sql, selectionArgs)
+        while (cursor.moveToNext()) {
+            val flowId = cursor.getLong(cursor.getColumnIndex("flow_id"))
+
+            val subjectId = cursor.getLong(cursor.getColumnIndex("subject_id"))
+            val subject = cursor.getString(cursor.getColumnIndex("subject"))
+
+            val teacherId = cursor.getLong(cursor.getColumnIndex("teacher_id"))
+            val surname = cursor.getString(cursor.getColumnIndex("surname"))
+            val name = cursor.getString(cursor.getColumnIndex("name"))
+            val patronymic = cursor.getString(cursor.getColumnIndex("patronymic"))
+
+            val cabinetId = cursor.getLong(cursor.getColumnIndex("cabinet_id"))
+            val cabinet = cursor.getString(cursor.getColumnIndex("cabinet"))
+            val building = cursor.getString(cursor.getColumnIndex("building"))
+            val address = cursor.getString(cursor.getColumnIndex("address"))
+
+            val id = cursor.getLong(cursor.getColumnIndex("schedule_id"))
+            val dayOfWeek = cursor.getInt(cursor.getColumnIndex("day_of_week"))
+            val lessonNum = cursor.getInt(cursor.getColumnIndex("lesson_num"))
+            val numerator = cursor.getInt(cursor.getColumnIndex("numerator")) == 1
+
+            result.add(Schedule(
+                id,
+                Flow(flowId, educationLevel, course, group, subgroup),
+                dayOfWeek,
+                lessonNum,
+                numerator,
+                Subject(subjectId, subject),
+                if (teacherId == 0L) null else Teacher(teacherId, surname, name, patronymic),
+                if (cabinetId == 0L) null else Cabinet(cabinetId, cabinet, building, address)
+            ))
         }
         cursor.close()
         db.close()

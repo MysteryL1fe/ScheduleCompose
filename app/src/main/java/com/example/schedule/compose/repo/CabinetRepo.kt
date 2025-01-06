@@ -25,8 +25,8 @@ class CabinetRepo(
 
     fun update(
         cabinet: String,
-        building: String,
-        address: String
+        building: String?,
+        address: String?
     ): Int {
         val values = ContentValues()
         values.put("address", address)
