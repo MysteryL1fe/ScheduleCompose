@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
 import com.example.schedule.compose.entity.Schedule
@@ -108,7 +109,8 @@ fun FindTeacherScreen(
             Text(
                 text = stringResource(R.string.find_teacher),
                 color = MaterialTheme.colorScheme.tertiary,
-                fontSize = viewModel.textSize
+                fontSize = viewModel.textSize,
+                textAlign = TextAlign.Center
             )
         }
 

@@ -436,7 +436,8 @@ private fun NewFlowDialog(label: String, onDismissRequest: () -> Unit, onDone: (
                         Text(
                             text = stringResource(R.string.cancel),
                             color = MaterialTheme.colorScheme.tertiary,
-                            fontSize = viewModel.textSize
+                            fontSize = viewModel.textSize,
+                            textAlign = TextAlign.Center
                         )
                     }
                     Spacer(
@@ -450,7 +451,8 @@ private fun NewFlowDialog(label: String, onDismissRequest: () -> Unit, onDone: (
                         Text(
                             text = stringResource(R.string.next),
                             color = MaterialTheme.colorScheme.tertiary,
-                            fontSize = viewModel.textSize
+                            fontSize = viewModel.textSize,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
