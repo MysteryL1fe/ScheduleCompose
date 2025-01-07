@@ -32,9 +32,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
 import com.example.schedule.compose.entity.Flow
+import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
+import com.example.schedule.compose.repo.HomeworkRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.ScheduleRepo
 import com.example.schedule.compose.repo.SubjectRepo
@@ -42,6 +44,7 @@ import com.example.schedule.compose.repo.TeacherRepo
 import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.screen.ChangeScheduleScreen
 import com.example.schedule.compose.screen.FindTeacherScreen
+import com.example.schedule.compose.screen.HomeworkScreen
 import com.example.schedule.compose.screen.ScheduleScreen
 import com.example.schedule.compose.screen.SettingsScreen
 import com.example.schedule.compose.theme.ScheduleComposeTheme
@@ -50,6 +53,7 @@ import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.view.model.activity.ScheduleActivityViewModel
 import com.example.schedule.compose.view.model.screen.ChangeScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.FindTeacherScreenViewModel
+import com.example.schedule.compose.view.model.screen.HomeworkScreenViewModel
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.SettingsScreenViewModel
 import kotlinx.coroutines.launch
@@ -62,9 +66,12 @@ class ScheduleActivity : ComponentActivity() {
     private var subgroup = 1
     private lateinit var flowRepo: FlowRepo
     private lateinit var scheduleRepo: ScheduleRepo
+    private lateinit var homeworkRepo: HomeworkRepo
     private lateinit var retrofitService: RetrofitService
     private lateinit var scheduleScreenViewModel: ScheduleScreenViewModel
     private lateinit var changeScheduleScreenViewModel: ChangeScheduleScreenViewModel
+    private lateinit var homeworkScreenViewModel: HomeworkScreenViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -79,17 +86,20 @@ class ScheduleActivity : ComponentActivity() {
         val teacherRepo = TeacherRepo(scheduleDBHelper)
         val cabinetRepo = CabinetRepo(scheduleDBHelper)
         scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
+        homeworkRepo = HomeworkRepo(scheduleDBHelper, flowRepo, subjectRepo)
 
         val saves = getSharedPreferences(SettingsStorage.SCHEDULE_SAVES, MODE_PRIVATE)
 
         if (SettingsStorage.useServer) {
             retrofitService = RetrofitService.getInstance()
             retrofitService.getFlow(educationLevel, course, group, subgroup, ::updateFlow)
+            retrofitService.getAllHomeworksByFlow(educationLevel, course, group, subgroup, ::updateHomeworks)
         }
 
         val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
-        scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, educationLevel, course, group, subgroup)
+        scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
         changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
+        homeworkScreenViewModel = HomeworkScreenViewModel(subjectRepo, scheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
         val findTeacherScreenViewModel = FindTeacherScreenViewModel()
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
@@ -101,6 +111,7 @@ class ScheduleActivity : ComponentActivity() {
                     scheduleActivityViewModel,
                     scheduleScreenViewModel,
                     changeScheduleScreenViewModel,
+                    homeworkScreenViewModel,
                     findTeacherScreenViewModel,
                     settingsScreenViewModel
                 )
@@ -109,15 +120,20 @@ class ScheduleActivity : ComponentActivity() {
     }
 
     private fun updateFlow(flow: Flow) {
-        if (flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup)?.lastEdit?.isBefore(flow.lastEdit) != false) {
-            retrofitService.getAllSchedulesByFlow(educationLevel, course, group, subgroup, ::updateSchedules)
+        if (flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(flow.educationLevel, flow.course, flow.group, flow.subgroup)?.lastEdit?.isBefore(flow.lastEdit) != false) {
+            retrofitService.getAllSchedulesByFlow(flow.educationLevel, flow.course, flow.group, flow.subgroup, ::updateSchedules)
         }
     }
 
     private fun updateSchedules(schedules: List<Schedule>) {
+        if (schedules.isEmpty()) return
+        val educationLevel = schedules[0].flow.educationLevel
+        val course = schedules[0].flow.course
+        val group = schedules[0].flow.group
+        val subgroup = schedules[0].flow.subgroup
         val curSchedules = scheduleRepo.findAllByFlow(educationLevel, course, group, subgroup)
         curSchedules.filter { schedule -> schedules.none { it.dayOfWeek == schedule.dayOfWeek && it.lessonNum == schedule.lessonNum && it.numerator == schedule.numerator } }.forEach {
-            scheduleRepo.deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(it.flow.educationLevel, it.flow.course, it.flow.group, it.flow.subgroup, it.dayOfWeek, it.lessonNum, it.numerator)
+            scheduleRepo.deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(educationLevel, course, group, subgroup, it.dayOfWeek, it.lessonNum, it.numerator)
         }
         schedules.filter { schedule -> curSchedules.any { it.dayOfWeek == schedule.dayOfWeek && it.lessonNum == schedule.lessonNum && it.numerator == schedule.numerator && (it.subject.subject != schedule.subject.subject || it.teacher?.surname != schedule.teacher?.surname || it.teacher?.name != schedule.teacher?.name || it.teacher?.patronymic != schedule.teacher?.patronymic || it.cabinet?.cabinet != schedule.cabinet?.cabinet || it.cabinet?.building != schedule.cabinet?.building) } }.forEach {
             scheduleRepo.update(educationLevel, course, group, subgroup, it.dayOfWeek, it.lessonNum, it.numerator, it.subject.subject, it.teacher?.surname, it.teacher?.name, it.teacher?.patronymic, it.cabinet?.cabinet, it.cabinet?.building)
@@ -128,6 +144,10 @@ class ScheduleActivity : ComponentActivity() {
         flowRepo.update(educationLevel, course, group, subgroup, LocalDateTime.now())
         scheduleScreenViewModel.update()
         changeScheduleScreenViewModel.update()
+    }
+
+    private fun updateHomeworks(homeworks: List<Homework>) {
+        homeworks.forEach { homeworkRepo.addOrUpdate(it.flow.educationLevel, it.flow.course, it.flow.group, it.flow.subgroup, it.homework, it.lessonDate, it.lessonNum, it.subject.subject) }
     }
 }
 
@@ -150,6 +170,7 @@ fun ScheduleApp(
     viewModel: ScheduleActivityViewModel,
     scheduleScreenViewModel: ScheduleScreenViewModel,
     changeScheduleScreenViewModel: ChangeScheduleScreenViewModel,
+    homeworkScreenViewModel: HomeworkScreenViewModel,
     findTeacherScreenViewModel: FindTeacherScreenViewModel,
     settingsScreenViewModel: SettingsScreenViewModel
 ) {
@@ -205,7 +226,15 @@ fun ScheduleApp(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
+                MenuItem.HOMEWORK -> {
+                    homeworkScreenViewModel.update()
+                    HomeworkScreen(
+                        viewModel = homeworkScreenViewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
                 MenuItem.FIND_TEACHER -> {
+                    findTeacherScreenViewModel.update()
                     FindTeacherScreen(
                         viewModel = findTeacherScreenViewModel,
                         modifier = Modifier.padding(innerPadding)

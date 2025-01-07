@@ -15,6 +15,6 @@ data class Flow(
     var sessionEndDate: LocalDate?,
     var active: Boolean?
 ) {
-    constructor(educationLevel: Int, course: Int, flow: Int, subgroup: Int) : this(null, educationLevel, course, flow, subgroup, null, null, null, null, null)
-    constructor(id: Long?, educationLevel: Int, course: Int, flow: Int, subgroup: Int) : this(id, educationLevel, course, flow, subgroup, null, null, null, null, null)
+    constructor(educationLevel: Int, course: Int, group: Int, subgroup: Int) : this(null, educationLevel, course, group, subgroup, null, null, null, null, null)
+    constructor(id: Long?, educationLevel: Int, course: Int, group: Int, subgroup: Int) : this(id, educationLevel, course, group, subgroup, null, null, null, null, null)
 }

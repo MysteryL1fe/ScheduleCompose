@@ -3,6 +3,7 @@ package com.example.schedule.compose.retrofit
 import android.util.Log
 import com.example.schedule.compose.entity.Cabinet
 import com.example.schedule.compose.entity.Flow
+import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.entity.Subject
 import com.example.schedule.compose.entity.Teacher
@@ -51,6 +52,7 @@ class RetrofitService private constructor() {
     private val teacherService = retrofit.create(TeacherController::class.java)
     private val cabinetService = retrofit.create(CabinetController::class.java)
     private val scheduleService = retrofit.create(ScheduleController::class.java)
+    private val homeworkService = retrofit.create(HomeworkController::class.java)
 
     fun getFlow(educationLevel: Int, course: Int, group: Int, subgroup: Int, onSuccess: (Flow) -> Unit) {
         val call = flowService.get(educationLevel, course, group, subgroup)
@@ -156,6 +158,21 @@ class RetrofitService private constructor() {
             override fun onFailure(p0: Call<List<Schedule>>, p1: Throwable) {
                 Log.e(TAG, "Receive schedules by teacher failure")
                 onFailure()
+            }
+        })
+    }
+
+    fun getAllHomeworksByFlow(educationLevel: Int, course: Int, group: Int, subgroup: Int, onSuccess: (List<Homework>) -> Unit) {
+        val call = homeworkService.getAllByFlow(educationLevel, course, group, subgroup)
+        call.enqueue(object : Callback<List<Homework>> {
+            override fun onResponse(call: Call<List<Homework>>, response: Response<List<Homework>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess)
+                }
+            }
+
+            override fun onFailure(p0: Call<List<Homework>>, p1: Throwable) {
+                Log.e(TAG, "Receive homeworks by flow failure")
             }
         })
     }

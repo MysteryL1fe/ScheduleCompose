@@ -4,9 +4,9 @@ import java.time.LocalDate
 
 data class Homework(
     var id: Long,
+    var flow: Flow,
     var homework: String,
     var lessonDate: LocalDate,
     var lessonNum: Int,
-    var flow: Long,
-    var lessonName: String
+    var subject: Subject
 )

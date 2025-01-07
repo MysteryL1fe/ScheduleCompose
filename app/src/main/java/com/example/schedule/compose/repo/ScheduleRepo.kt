@@ -283,16 +283,13 @@ class ScheduleRepo(
         lessonNum: Int,
         numerator: Boolean
     ): Int {
-        val foundFlow: Flow? = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(
-            educationLevel, course, group, subgroup
-        )
-        if (foundFlow == null) return 0
+        val foundFlow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup) ?: return 0
 
         val whereClause = "flow=? AND day_of_week=? AND lesson_num=? AND numerator=?"
         val whereArgs = arrayOf(foundFlow.id.toString(), dayOfWeek.toString(), lessonNum.toString(), if (numerator) "1" else "0")
 
         val db = dbHelper.writableDatabase
-        val count: Int = db.delete("schedule", whereClause, whereArgs)
+        val count = db.delete("schedule", whereClause, whereArgs)
         db.close()
         return count
     }

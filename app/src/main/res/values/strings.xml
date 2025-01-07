@@ -11,7 +11,7 @@
     <string name="lessons_not_founded">Занятий не найдено</string>
     <string name="homework">Домашнее задание</string>
     <string name="homeworks">Домашние задания</string>
-    <string name="homeworks_not_founded">Домашних заданий нету</string>
+    <string name="homeworks_not_found">Домашних заданий нету</string>
     <string name="next">Продолжить</string>
     <string name="ok">Готово</string>
     <string name="change">Изменить</string>
@@ -56,6 +56,7 @@
     <string name="full_display_mode">Полное отображение</string>
     <string name="compact_display_mode">Компактное отображение</string>
     <string name="change_homework">Изменить ДЗ</string>
+    <string name="show_homework">Посмотреть ДЗ</string>
     <string name="activate_server">Включить серверную синхронизацию</string>
     <string name="deactivate_server">Выключить серверную синхронизацию</string>
     <string name="clear_db">Очистить данные</string>

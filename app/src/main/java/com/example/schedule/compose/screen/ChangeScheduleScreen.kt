@@ -2,7 +2,6 @@ package com.example.schedule.compose.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -351,7 +350,7 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = subject,
-                    onValueChange = { subject = it },
+                    onValueChange = { subject = it.trim() },
                     label = stringResource(R.string.subject),
                     suggestions = viewModel.subjects.map { it.subject },
                     viewModel = viewModel
@@ -366,21 +365,21 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = surname,
-                    onValueChange = { surname = it },
+                    onValueChange = { surname = it.trim() },
                     label = stringResource(R.string.teacher_surname),
                     suggestions = viewModel.teachers.map { it.surname }.distinct(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it.trim() },
                     label = stringResource(R.string.teacher_name_optional),
                     suggestions = viewModel.teachers.filter { it.name != null }.map { it.name!! }.distinct().sorted(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = patronymic,
-                    onValueChange = { patronymic = it },
+                    onValueChange = { patronymic = it.trim() },
                     label = stringResource(R.string.teacher_patronymic_optional),
                     suggestions = viewModel.teachers.filter { it.patronymic != null }.map { it.patronymic!! }.distinct().sorted(),
                     viewModel = viewModel
@@ -395,14 +394,14 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = cabinet,
-                    onValueChange = { cabinet = it },
+                    onValueChange = { cabinet = it.trim() },
                     label = stringResource(R.string.cabinet),
                     suggestions = viewModel.cabinets.map { it.cabinet }.distinct(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = building,
-                    onValueChange = { building = it },
+                    onValueChange = { building = it.trim() },
                     label = stringResource(R.string.building_optional),
                     suggestions = viewModel.cabinets.filter { it.building != null }.map { it.building!! }.distinct().sorted(),
                     viewModel = viewModel
@@ -471,7 +470,7 @@ private fun ChangeScheduleDialog(
                     TextButton(
                         onClick = {
                             if (subject.isNotBlank() && (surname.isNotBlank() || name.isBlank() && patronymic.isBlank()) && (cabinet.isNotBlank() || building.isBlank()) && (numerator || denominator)) {
-                                onDone(numerator, denominator, subject.trim(), surname.trim(), name.trim(), patronymic.trim(), cabinet.trim(), building.trim())
+                                onDone(numerator, denominator, subject, surname, name, patronymic, cabinet, building)
                             }
                         },
                         colors = buttonColors,
@@ -501,14 +500,13 @@ private fun ScheduleCard(
     var showChangeLessonDialog by remember { mutableStateOf(false) }
 
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
             .padding(bottom = 10.dp)
     ) {
         if (schedule != null) {
             Column(
-                modifier = Modifier.weight(0.75f)
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = schedule.subject.subject,
@@ -551,12 +549,14 @@ private fun ScheduleCard(
                     )
                 }
             }
+        } else {
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
         }
 
         Row(
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(0.25f)
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton (
                 onClick = { showChangeLessonDialog = true },
@@ -601,7 +601,7 @@ private fun ScheduleCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropdownTextField(
+private fun DropdownTextField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,

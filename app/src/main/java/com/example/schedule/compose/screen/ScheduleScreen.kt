@@ -8,17 +8,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.schedule.compose.R
+import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
@@ -30,34 +34,42 @@ fun ScheduleScreen(
     viewModel: ScheduleScreenViewModel,
     modifier: Modifier = Modifier
 ) {
-    val displayedSchedules = viewModel.schedules.filter { viewModel.displayModeFull || (it.size > 0 && it.stream().anyMatch { schedule -> schedule != null } ) }
-    if (displayedSchedules.isEmpty()) {
-        Text(
-            text = stringResource(R.string.lessons_not_founded),
-            color = MaterialTheme.colorScheme.tertiary,
-            fontSize = viewModel.textSize,
-            modifier = modifier
-        )
-    } else {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxSize()
-        ) {
-            itemsIndexed(displayedSchedules) { index, schedules ->
+    var isEmpty by remember { mutableStateOf(true) }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        items(13) { index ->
+            val schedules = viewModel.schedules[index]
+            val homeworks = viewModel.homeworks[index]
+            if (viewModel.displayModeFull || schedules.any { it != null } || homeworks.any { it != null }) {
+                isEmpty = false
                 SchedulesView(
                     schedules = schedules,
-                    startDate = viewModel.date.value,
+                    homeworks = homeworks,
+                    startDate = viewModel.date,
                     daysOffset = index,
                     viewModel = viewModel
                 )
             }
         }
     }
+
+    if (isEmpty) {
+        Text(
+            text = stringResource(R.string.lessons_not_founded),
+            color = MaterialTheme.colorScheme.tertiary,
+            fontSize = viewModel.textSize,
+            modifier = modifier
+        )
+    }
 }
 
 @Composable
 private fun SchedulesView(
     schedules: List<Schedule?>,
+    homeworks: List<Homework?>,
     startDate: LocalDate,
     daysOffset: Int,
     viewModel: ScheduleScreenViewModel
@@ -68,16 +80,19 @@ private fun SchedulesView(
             text = formattedDate,
             color = MaterialTheme.colorScheme.tertiary,
             fontSize = viewModel.textSize,
-            modifier = Modifier.padding(vertical = 10.dp)
+            modifier = Modifier.padding(10.dp)
         )
         HorizontalDivider(
             thickness = 2.dp,
             color = MaterialTheme.colorScheme.secondary
         )
-        schedules.forEachIndexed { index, schedule ->
-            if (viewModel.displayModeFull || schedule != null) {
+        (0..7).forEach { index ->
+            val schedule = schedules[index]
+            val homework = homeworks[index]
+            if (viewModel.displayModeFull || schedule != null || homework != null) {
                 ScheduleView(
                     schedule = schedule,
+                    homework = homeworks[index],
                     lessonNum = index + 1,
                     viewModel = viewModel
                 )
@@ -93,6 +108,7 @@ private fun SchedulesView(
 @Composable
 private fun ScheduleView(
     schedule: Schedule?,
+    homework: Homework?,
     lessonNum: Int,
     viewModel: ScheduleScreenViewModel
 ) {
@@ -130,53 +146,69 @@ private fun ScheduleView(
             )
         }
         if (schedule != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
                 modifier = Modifier.fillMaxWidth()
                     .padding(bottom = 10.dp)
             ) {
-                Column {
+                Text(
+                    text = schedule.subject.subject,
+                    fontSize = viewModel.textSize,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(20.dp, 0.dp)
+                )
+
+                if (schedule.teacher?.surname?.isNotEmpty() == true) {
                     Text(
-                        text = schedule.subject.subject,
+                        text = buildString {
+                            append(schedule.teacher!!.surname)
+                            if (schedule.teacher!!.name?.isNotEmpty() == true) {
+                                append(" ${schedule.teacher!!.name}")
+                            }
+                            if (schedule.teacher!!.patronymic?.isNotEmpty() == true) {
+                                append(" ${schedule.teacher!!.patronymic}")
+                            }
+                        },
                         fontSize = viewModel.textSize,
-                        color = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.padding(20.dp, 0.dp)
+                        modifier = Modifier.padding(20.dp, 0.dp),
+                        color = MaterialTheme.colorScheme.tertiary
                     )
-
-                    if (schedule.teacher?.surname?.isNotEmpty() == true) {
-                        Text(
-                            text = buildString {
-                                append(schedule.teacher!!.surname)
-                                if (schedule.teacher!!.name?.isNotEmpty() == true) {
-                                    append(" ${schedule.teacher!!.name}")
-                                }
-                                if (schedule.teacher!!.patronymic?.isNotEmpty() == true) {
-                                    append(" ${schedule.teacher!!.patronymic}")
-                                }
-                            },
-                            fontSize = viewModel.textSize,
-                            modifier = Modifier.padding(20.dp, 0.dp),
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
-
-                    if (schedule.cabinet?.cabinet?.isNotEmpty() == true) {
-                        Text(
-                            text = buildString {
-                                append(schedule.cabinet!!.cabinet)
-                                if (schedule.cabinet?.building?.isNotEmpty() == true) {
-                                    append(", корпус ${schedule.cabinet!!.building}")
-                                }
-                                if (schedule.cabinet!!.address?.isNotEmpty() == true) {
-                                    append(", ${schedule.cabinet!!.address}")
-                                }
-                            },
-                            fontSize = viewModel.textSize,
-                            modifier = Modifier.padding(20.dp, 0.dp),
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
                 }
+
+                if (schedule.cabinet?.cabinet?.isNotEmpty() == true) {
+                    Text(
+                        text = buildString {
+                            append(schedule.cabinet!!.cabinet)
+                            if (schedule.cabinet?.building?.isNotEmpty() == true) {
+                                append(", корпус ${schedule.cabinet!!.building}")
+                            }
+                            if (schedule.cabinet!!.address?.isNotEmpty() == true) {
+                                append(", ${schedule.cabinet!!.address}")
+                            }
+                        },
+                        fontSize = viewModel.textSize,
+                        modifier = Modifier.padding(20.dp, 0.dp),
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        }
+
+        if (homework != null) {
+            HorizontalDivider(
+                thickness = 2.dp,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(start = 20.dp, top = 10.dp, bottom = 10.dp)
+            ) {
+                Text(
+                    text = "ДЗ, ${homework.subject.subject}:\n${homework.homework}",
+                    color = MaterialTheme.colorScheme.tertiary,
+                    fontSize = viewModel.textSize,
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }

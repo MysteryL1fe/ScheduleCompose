@@ -49,6 +49,7 @@ import com.example.schedule.compose.entity.Subject
 import com.example.schedule.compose.entity.Teacher
 import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
+import com.example.schedule.compose.repo.HomeworkRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.SubjectRepo
 import com.example.schedule.compose.repo.TeacherRepo
@@ -57,6 +58,7 @@ import com.example.schedule.compose.theme.ScheduleComposeTheme
 import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.view.model.activity.MainActivityViewModel
+import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainActivityViewModel
@@ -79,6 +81,9 @@ class MainActivity : ComponentActivity() {
         subjectRepo = SubjectRepo(scheduleDBHelper)
         teacherRepo = TeacherRepo(scheduleDBHelper)
         cabinetRepo = CabinetRepo(scheduleDBHelper)
+        val homeworkRepo = HomeworkRepo(scheduleDBHelper, flowRepo, subjectRepo)
+
+        homeworkRepo.deleteAllBeforeDate(LocalDate.now())
 
         if (SettingsStorage.useServer) {
             val retrofitService = RetrofitService.getInstance()

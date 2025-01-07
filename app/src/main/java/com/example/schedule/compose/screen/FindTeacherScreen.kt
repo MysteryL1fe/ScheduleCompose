@@ -67,7 +67,6 @@ fun FindTeacherScreen(
 
     Column(
         modifier = modifier.fillMaxSize()
-            .padding(16.dp, 0.dp)
     ) {
         TextField(
             value = surname,
@@ -82,7 +81,7 @@ fun FindTeacherScreen(
             colors = textFieldColors,
             textStyle = TextStyle(fontSize = viewModel.textSize),
             modifier = Modifier.fillMaxWidth()
-                .padding(top = 10.dp)
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
         )
         TextField(
             value = name,
@@ -97,7 +96,7 @@ fun FindTeacherScreen(
             colors = textFieldColors,
             textStyle = TextStyle(fontSize = viewModel.textSize),
             modifier = Modifier.fillMaxWidth()
-                .padding(top = 10.dp)
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
         )
         TextField(
             value = patronymic,
@@ -112,7 +111,7 @@ fun FindTeacherScreen(
             colors = textFieldColors,
             textStyle = TextStyle(fontSize = viewModel.textSize),
             modifier = Modifier.fillMaxWidth()
-                .padding(top = 10.dp)
+                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
         )
 
         TextButton(
@@ -120,11 +119,11 @@ fun FindTeacherScreen(
                 if (surname.isNotBlank()) {
                     viewModel.findSchedules(surname, name, patronymic)
                 }
-                      },
+            },
             colors = buttonColors,
             contentPadding = PaddingValues(25.dp),
             modifier = Modifier.fillMaxWidth()
-                .padding(0.dp, 20.dp)
+                .padding(20.dp)
         ) {
             Text(
                 text = stringResource(R.string.find_teacher),
@@ -151,7 +150,7 @@ fun FindTeacherScreen(
                         text = formattedDate,
                         color = MaterialTheme.colorScheme.tertiary,
                         fontSize = viewModel.textSize,
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        modifier = Modifier.padding(10.dp)
                     )
                     HorizontalDivider(
                         thickness = 2.dp,
