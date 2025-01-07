@@ -14,6 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -68,50 +72,26 @@ fun FindTeacherScreen(
     Column(
         modifier = modifier.fillMaxSize()
     ) {
-        TextField(
+        DropdownTextField(
             value = surname,
             onValueChange = { surname = it.trimStart() },
-            label = {
-                Text(
-                    text = stringResource(R.string.teacher_surname),
-                    fontSize = viewModel.textSize
-                )
-                    },
-            singleLine = true,
-            colors = textFieldColors,
-            textStyle = TextStyle(fontSize = viewModel.textSize),
-            modifier = Modifier.fillMaxWidth()
-                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
+            label = stringResource(R.string.teacher_surname),
+            suggestions = viewModel.teachers.map { it.surname }.distinct(),
+            viewModel = viewModel
         )
-        TextField(
+        DropdownTextField(
             value = name,
             onValueChange = { name = it.trimStart() },
-            label = {
-                Text(
-                    text = stringResource(R.string.teacher_name),
-                    fontSize = viewModel.textSize
-                )
-            },
-            singleLine = true,
-            colors = textFieldColors,
-            textStyle = TextStyle(fontSize = viewModel.textSize),
-            modifier = Modifier.fillMaxWidth()
-                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
+            label = stringResource(R.string.teacher_name_optional),
+            suggestions = viewModel.teachers.filter { it.name != null }.map { it.name!! }.distinct().sorted(),
+            viewModel = viewModel
         )
-        TextField(
+        DropdownTextField(
             value = patronymic,
             onValueChange = { patronymic = it.trimStart() },
-            label = {
-                Text(
-                    text = stringResource(R.string.teacher_patronymic),
-                    fontSize = viewModel.textSize
-                )
-            },
-            singleLine = true,
-            colors = textFieldColors,
-            textStyle = TextStyle(fontSize = viewModel.textSize),
-            modifier = Modifier.fillMaxWidth()
-                .padding(start = 16.dp, top = 10.dp, end = 16.dp)
+            label = stringResource(R.string.teacher_patronymic_optional),
+            suggestions = viewModel.teachers.filter { it.patronymic != null }.map { it.patronymic!! }.distinct().sorted(),
+            viewModel = viewModel
         )
 
         TextButton(
@@ -255,6 +235,57 @@ private fun ScheduleView(
                         fontSize = viewModel.textSize,
                         modifier = Modifier.padding(20.dp, 0.dp),
                         color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DropdownTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    suggestions: List<String>,
+    viewModel: FindTeacherScreenViewModel
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+            .padding(start = 16.dp, top = 10.dp, end = 16.dp)
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = {
+                Text(
+                    text = label,
+                    fontSize = viewModel.textSize
+                )
+            },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            singleLine = true,
+            colors = textFieldColors,
+            textStyle = TextStyle(fontSize = viewModel.textSize),
+            modifier = Modifier.menuAnchor()
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            suggestions.forEach { suggestion ->
+                if (suggestion.startsWith(value, ignoreCase = true)) {
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            onValueChange(suggestion)
+                            expanded = false
+                        }
                     )
                 }
             }

@@ -107,7 +107,7 @@ class ScheduleActivity : ComponentActivity() {
         changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
         val tempScheduleScreenViewModel = TempScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, tempScheduleRepo, educationLevel, course, group, subgroup)
         val homeworkScreenViewModel = HomeworkScreenViewModel(subjectRepo, scheduleRepo, tempScheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
-        val findTeacherScreenViewModel = FindTeacherScreenViewModel()
+        val findTeacherScreenViewModel = FindTeacherScreenViewModel(teacherRepo)
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
         setContent {
@@ -269,6 +269,7 @@ fun ScheduleApp(
                 else -> Text(
                     text = "Not implemented yet",
                     color = MaterialTheme.colorScheme.tertiary,
+                    fontSize = viewModel.textSize,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(innerPadding)
                         .fillMaxSize()

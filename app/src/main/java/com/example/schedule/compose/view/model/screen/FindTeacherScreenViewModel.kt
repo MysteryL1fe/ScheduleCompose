@@ -5,20 +5,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.schedule.compose.entity.Schedule
+import com.example.schedule.compose.repo.TeacherRepo
 import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.utils.Utils
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class FindTeacherScreenViewModel : ViewModel() {
+class FindTeacherScreenViewModel(
+    private val teacherRepo: TeacherRepo
+) : ViewModel() {
     var schedules by mutableStateOf(mapOf<LocalDate, List<Schedule>>())
+    var teachers by mutableStateOf(teacherRepo.findAll())
     var loading by mutableStateOf(false)
     var textSize by mutableStateOf(SettingsStorage.textSize)
     private val retrofitService = RetrofitService.getInstance()
 
     fun update() {
         textSize = SettingsStorage.textSize
+        teachers = teacherRepo.findAll()
     }
 
     fun findSchedules(surname: String, name: String, patronymic: String) {
