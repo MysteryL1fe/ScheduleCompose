@@ -5,49 +5,48 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.entity.TempSchedule
-import com.example.schedule.compose.repo.HomeworkRepo
+import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.ScheduleRepo
 import com.example.schedule.compose.repo.SubjectRepo
+import com.example.schedule.compose.repo.TeacherRepo
 import com.example.schedule.compose.repo.TempScheduleRepo
 import com.example.schedule.compose.utils.SettingsStorage
 import com.example.schedule.compose.utils.Utils
 import java.time.LocalDate
 
-class HomeworkScreenViewModel(
+class TempScheduleScreenViewModel(
     private val subjectRepo: SubjectRepo,
+    private val teacherRepo: TeacherRepo,
+    private val cabinetRepo: CabinetRepo,
     private val scheduleRepo: ScheduleRepo,
     private val tempScheduleRepo: TempScheduleRepo,
-    private val homeworkRepo: HomeworkRepo,
     private val educationLevel: Int,
     private val course: Int,
     private val group: Int,
     private val subgroup: Int
 ) : ViewModel() {
-    val homeworks = mutableStateListOf<Homework>()
-    var changeHomeworkScreen by mutableStateOf(false)
     var date: LocalDate by mutableStateOf(LocalDate.now())
     val schedules = mutableStateListOf<Schedule?>().apply { addAll(arrayOfNulls(8)) }
     val tempSchedules = mutableStateListOf<TempSchedule?>().apply { addAll(arrayOfNulls(8)) }
-    val homeworksByDate = mutableStateListOf<Homework?>().apply { addAll(arrayOfNulls(8)) }
     var subjects by mutableStateOf(subjectRepo.findAll())
+    var teachers by mutableStateOf(teacherRepo.findAll())
+    var cabinets by mutableStateOf(cabinetRepo.findAll())
     var textSize by mutableStateOf(SettingsStorage.textSize)
 
     var showDatePickerDialog by mutableStateOf(false)
 
     fun update() {
         textSize = SettingsStorage.textSize
-        homeworks.clear()
-        homeworks.addAll(homeworkRepo.findAllByFlow(educationLevel, course, group, subgroup))
         subjects = subjectRepo.findAll()
+        teachers = teacherRepo.findAll()
+        cabinets = cabinetRepo.findAll()
         val dayOfWeek = date.dayOfWeek.value
         val numerator = Utils.isNumerator(date)
         for (i in 1..8) {
             schedules[i - 1] = scheduleRepo.findByFlowAndDayOfWeekAndLessonNumAndNumerator(educationLevel, course, group, subgroup, dayOfWeek, i, numerator)
             tempSchedules[i - 1] = tempScheduleRepo.findByFlowAndLessonDateAndLessonNum(educationLevel, course, group, subgroup, date, i)
-            homeworksByDate[i - 1] = homeworkRepo.findByFlowAndLessonDateAndLessonNum(educationLevel, course, group, subgroup, date, i)
         }
     }
 
@@ -57,13 +56,22 @@ class HomeworkScreenViewModel(
         showDatePickerDialog = false
     }
 
-    fun changeHomework(lessonNum: Int, homework: String, subject: String) {
-        homeworkRepo.addOrUpdate(educationLevel, course, group, subgroup, homework, date, lessonNum, subject)
+    fun changeTempSchedule(
+        lessonNum: Int,
+        willLessonBe: Boolean,
+        subject: String? = null,
+        surname: String? = null,
+        name: String? = null,
+        patronymic: String? = null,
+        cabinet: String? = null,
+        building: String? = null
+    ) {
+        tempScheduleRepo.addOrUpdate(educationLevel, course, group, subgroup, date, lessonNum, willLessonBe, subject, surname, name, patronymic, cabinet, building)
         update()
     }
 
-    fun deleteHomework(lessonNum: Int) {
-        homeworkRepo.deleteByFlowAndLessonDateAndLessonNum(educationLevel, course, group, subgroup, date, lessonNum)
+    fun deleteTempSchedule(lessonNum: Int) {
+        tempScheduleRepo.deleteByFlowAndLessonDateAndLessonNum(educationLevel, course, group, subgroup, date, lessonNum)
         update()
     }
 }

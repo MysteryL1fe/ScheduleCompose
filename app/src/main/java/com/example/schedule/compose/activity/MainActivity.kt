@@ -53,6 +53,7 @@ import com.example.schedule.compose.repo.HomeworkRepo
 import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.SubjectRepo
 import com.example.schedule.compose.repo.TeacherRepo
+import com.example.schedule.compose.repo.TempScheduleRepo
 import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.theme.ScheduleComposeTheme
 import com.example.schedule.compose.theme.ThemeManager
@@ -81,8 +82,10 @@ class MainActivity : ComponentActivity() {
         subjectRepo = SubjectRepo(scheduleDBHelper)
         teacherRepo = TeacherRepo(scheduleDBHelper)
         cabinetRepo = CabinetRepo(scheduleDBHelper)
+        val tempScheduleRepo = TempScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
         val homeworkRepo = HomeworkRepo(scheduleDBHelper, flowRepo, subjectRepo)
 
+        tempScheduleRepo.deleteAllBeforeDate(LocalDate.now())
         homeworkRepo.deleteAllBeforeDate(LocalDate.now())
 
         if (SettingsStorage.useServer) {

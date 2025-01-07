@@ -350,7 +350,7 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = subject,
-                    onValueChange = { subject = it.trim() },
+                    onValueChange = { subject = it.trimStart() },
                     label = stringResource(R.string.subject),
                     suggestions = viewModel.subjects.map { it.subject },
                     viewModel = viewModel
@@ -365,21 +365,21 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = surname,
-                    onValueChange = { surname = it.trim() },
+                    onValueChange = { surname = it.trimStart() },
                     label = stringResource(R.string.teacher_surname),
                     suggestions = viewModel.teachers.map { it.surname }.distinct(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = name,
-                    onValueChange = { name = it.trim() },
+                    onValueChange = { name = it.trimStart() },
                     label = stringResource(R.string.teacher_name_optional),
                     suggestions = viewModel.teachers.filter { it.name != null }.map { it.name!! }.distinct().sorted(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = patronymic,
-                    onValueChange = { patronymic = it.trim() },
+                    onValueChange = { patronymic = it.trimStart() },
                     label = stringResource(R.string.teacher_patronymic_optional),
                     suggestions = viewModel.teachers.filter { it.patronymic != null }.map { it.patronymic!! }.distinct().sorted(),
                     viewModel = viewModel
@@ -394,14 +394,14 @@ private fun ChangeScheduleDialog(
                 )
                 DropdownTextField(
                     value = cabinet,
-                    onValueChange = { cabinet = it.trim() },
+                    onValueChange = { cabinet = it.trimStart() },
                     label = stringResource(R.string.cabinet),
                     suggestions = viewModel.cabinets.map { it.cabinet }.distinct(),
                     viewModel = viewModel
                 )
                 DropdownTextField(
                     value = building,
-                    onValueChange = { building = it.trim() },
+                    onValueChange = { building = it.trimStart() },
                     label = stringResource(R.string.building_optional),
                     suggestions = viewModel.cabinets.filter { it.building != null }.map { it.building!! }.distinct().sorted(),
                     viewModel = viewModel
@@ -470,7 +470,7 @@ private fun ChangeScheduleDialog(
                     TextButton(
                         onClick = {
                             if (subject.isNotBlank() && (surname.isNotBlank() || name.isBlank() && patronymic.isBlank()) && (cabinet.isNotBlank() || building.isBlank()) && (numerator || denominator)) {
-                                onDone(numerator, denominator, subject, surname, name, patronymic, cabinet, building)
+                                onDone(numerator, denominator, subject.trim(), surname.trim(), name.trim(), patronymic.trim(), cabinet.trim(), building.trim())
                             }
                         },
                         colors = buttonColors,

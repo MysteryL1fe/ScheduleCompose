@@ -70,7 +70,7 @@ fun FindTeacherScreen(
     ) {
         TextField(
             value = surname,
-            onValueChange = { surname = it },
+            onValueChange = { surname = it.trimStart() },
             label = {
                 Text(
                     text = stringResource(R.string.teacher_surname),
@@ -85,7 +85,7 @@ fun FindTeacherScreen(
         )
         TextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { name = it.trimStart() },
             label = {
                 Text(
                     text = stringResource(R.string.teacher_name),
@@ -100,7 +100,7 @@ fun FindTeacherScreen(
         )
         TextField(
             value = patronymic,
-            onValueChange = { patronymic = it },
+            onValueChange = { patronymic = it.trimStart() },
             label = {
                 Text(
                     text = stringResource(R.string.teacher_patronymic),
@@ -117,7 +117,7 @@ fun FindTeacherScreen(
         TextButton(
             onClick = {
                 if (surname.isNotBlank()) {
-                    viewModel.findSchedules(surname, name, patronymic)
+                    viewModel.findSchedules(surname.trim(), name.trim(), patronymic.trim())
                 }
             },
             colors = buttonColors,

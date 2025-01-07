@@ -50,7 +50,7 @@
     <string name="group_must_be_number">Группа должна быть числом</string>
     <string name="subgroup_must_be_number">Подгруппа должна быть числом</string>
     <string name="error">Произошла ошибка</string>
-    <string name="lesson_wont_be">Пары не будет</string>
+    <string name="lesson_wont_be">Занятия не будет</string>
     <string name="replace">Заменить</string>
     <string name="display_mode">Режим отображения расписания</string>
     <string name="full_display_mode">Полное отображение</string>

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -53,6 +54,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.schedule.compose.R
 import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
+import com.example.schedule.compose.entity.TempSchedule
 import com.example.schedule.compose.utils.Utils
 import com.example.schedule.compose.view.model.screen.HomeworkScreenViewModel
 import java.time.LocalDate
@@ -144,6 +146,7 @@ fun HomeworkScreen(
                     }
                     ScheduleCard(
                         schedule = viewModel.schedules[index],
+                        tempSchedule = viewModel.tempSchedules[index],
                         homework = viewModel.homeworksByDate[index],
                         lessonNum = index + 1,
                         viewModel = viewModel
@@ -155,7 +158,7 @@ fun HomeworkScreen(
                 }
             }
             TextButton(
-                onClick = viewModel::closeChangeHomework,
+                onClick = { viewModel.changeHomeworkScreen = false },
                 colors = buttonColors,
                 contentPadding = PaddingValues(25.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -170,7 +173,7 @@ fun HomeworkScreen(
             }
         } else {
             TextButton(
-                onClick = viewModel::openChangeHomework,
+                onClick = { viewModel.changeHomeworkScreen = true },
                 colors = buttonColors,
                 contentPadding = PaddingValues(25.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -300,6 +303,7 @@ private fun HomeworkCard(
 @Composable
 private fun ScheduleCard(
     schedule: Schedule?,
+    tempSchedule: TempSchedule?,
     homework: Homework?,
     lessonNum: Int,
     viewModel: HomeworkScreenViewModel
@@ -329,9 +333,29 @@ private fun ScheduleCard(
                     modifier = Modifier.padding(25.dp, 5.dp, 10.dp, 5.dp)
                 )
             }
+
+            if (tempSchedule?.willLessonBe == true) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_temporary),
+                    contentDescription = stringResource(R.string.lesson_wont_be),
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(32.dp)
+                        .padding(5.dp)
+                )
+            } else if (tempSchedule?.willLessonBe == false) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_cross),
+                    contentDescription = stringResource(R.string.lesson_wont_be),
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(32.dp)
+                        .padding(5.dp)
+                )
+            }
+
             Spacer(
                 modifier = Modifier.weight(1f)
             )
+
             Text(
                 text = Utils.lessonsBeginning[lessonNum - 1] + " - " + Utils.lessonsEnding[lessonNum - 1],
                 color = MaterialTheme.colorScheme.tertiary,
@@ -344,7 +368,52 @@ private fun ScheduleCard(
             modifier = Modifier.fillMaxWidth()
                 .padding(bottom = 10.dp)
         ) {
-            if (schedule != null) {
+            if (tempSchedule?.willLessonBe == true) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = tempSchedule.subject!!.subject,
+                        fontSize = viewModel.textSize,
+                        color = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.padding(20.dp, 0.dp)
+                    )
+
+                    if (tempSchedule.teacher?.surname?.isNotEmpty() == true) {
+                        Text(
+                            text = buildString {
+                                append(tempSchedule.teacher!!.surname)
+                                if (tempSchedule.teacher!!.name?.isNotEmpty() == true) {
+                                    append(" ${tempSchedule.teacher!!.name}")
+                                }
+                                if (tempSchedule.teacher!!.patronymic?.isNotEmpty() == true) {
+                                    append(" ${tempSchedule.teacher!!.patronymic}")
+                                }
+                            },
+                            fontSize = viewModel.textSize,
+                            modifier = Modifier.padding(20.dp, 0.dp),
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+
+                    if (tempSchedule.cabinet?.cabinet?.isNotEmpty() == true) {
+                        Text(
+                            text = buildString {
+                                append(tempSchedule.cabinet!!.cabinet)
+                                if (tempSchedule.cabinet?.building?.isNotEmpty() == true) {
+                                    append(", корпус ${tempSchedule.cabinet!!.building}")
+                                }
+                                if (tempSchedule.cabinet!!.address?.isNotEmpty() == true) {
+                                    append(", ${tempSchedule.cabinet!!.address}")
+                                }
+                            },
+                            fontSize = viewModel.textSize,
+                            modifier = Modifier.padding(20.dp, 0.dp),
+                            color = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+                }
+            } else if (schedule != null) {
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
@@ -450,7 +519,7 @@ private fun ScheduleCard(
     if (showChangeHomeworkDialog) {
         ChangeHomeworkDialog(
             homework = homework,
-            subject = schedule?.subject?.subject,
+            subject = tempSchedule?.subject?.subject ?: schedule?.subject?.subject,
             onDismissRequest = { showChangeHomeworkDialog = false },
             onDone = { homeworkText, subjectText ->
                 viewModel.changeHomework(lessonNum, homeworkText, subjectText)
@@ -488,7 +557,7 @@ private fun ChangeHomeworkDialog(
             ) {
                 TextField(
                     value = homeworkText,
-                    onValueChange = { homeworkText = it.trim() },
+                    onValueChange = { homeworkText = it.trimStart() },
                     label = {
                         Text(
                             text = stringResource(R.string.homework),
@@ -502,7 +571,7 @@ private fun ChangeHomeworkDialog(
                 )
                 DropdownTextField(
                     value = subjectText,
-                    onValueChange = { subjectText = it.trim() },
+                    onValueChange = { subjectText = it.trimStart() },
                     label = stringResource(R.string.subject),
                     suggestions = viewModel.subjects.map { it.subject },
                     viewModel = viewModel
@@ -525,7 +594,7 @@ private fun ChangeHomeworkDialog(
                     TextButton(
                         onClick = {
                             if (homeworkText.isNotBlank() && subjectText.isNotBlank()) {
-                                onDone(homeworkText, subjectText)
+                                onDone(homeworkText.trim(), subjectText.trim())
                             }
                         },
                         colors = buttonColors,

@@ -5,11 +5,13 @@ import android.content.ContentValues
 import android.database.Cursor
 import com.example.schedule.compose.entity.Cabinet
 import com.example.schedule.compose.entity.Flow
-import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.entity.Subject
 import com.example.schedule.compose.entity.Teacher
+import com.example.schedule.compose.entity.TempSchedule
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-class ScheduleRepo(
+class TempScheduleRepo(
     private val dbHelper: ScheduleDBHelper,
     private val flowRepo: FlowRepo,
     private val subjectRepo: SubjectRepo,
@@ -21,53 +23,48 @@ class ScheduleRepo(
         course: Int,
         group: Int,
         subgroup: Int,
-        dayOfWeek: Int,
+        lessonDate: LocalDate,
         lessonNum: Int,
-        numerator: Boolean,
-        subject: String,
+        willLessonBe: Boolean,
+        subject: String?,
         surname: String?,
         name: String?,
         patronymic: String?,
         cabinet: String?,
         building: String?
     ): Long {
-        val foundFlow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(
-            educationLevel, course, group, subgroup
-        )
+        val foundFlow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup)
         val flowId = foundFlow?.id ?: flowRepo.add(educationLevel, course, group, subgroup)
 
-        val foundSubject = subjectRepo.findBySubject(
-            subject
-        )
-        val subjectId = foundSubject?.id ?: subjectRepo.add(subject)
+        var subjectId: Long? = null
+        if (subject?.isNotBlank() == true) {
+            val foundSubject = subjectRepo.findBySubject(subject)
+            subjectId = foundSubject?.id ?: subjectRepo.add(subject)
+        }
 
         var teacherId: Long? = null
         if (surname?.isNotBlank() == true) {
-            val foundTeacher = teacherRepo.findBySurnameAndNameAndPatronymic(
-                surname, name, patronymic
-            )
+            val foundTeacher = teacherRepo.findBySurnameAndNameAndPatronymic(surname, name, patronymic)
             teacherId = foundTeacher?.id ?: teacherRepo.add(surname, name, patronymic)
         }
 
         var cabinetId: Long? = null
         if (cabinet?.isNotBlank() == true) {
-            val foundCabinet = cabinetRepo.findByCabinetAndBuilding(
-                cabinet, building
-            )
+            val foundCabinet = cabinetRepo.findByCabinetAndBuilding(cabinet, building)
             cabinetId = foundCabinet?.id ?: cabinetRepo.add(cabinet, building)
         }
 
         val values = ContentValues()
         values.put("flow", flowId)
-        values.put("day_of_week", dayOfWeek)
+        values.put("lesson_date", lessonDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
         values.put("lesson_num", lessonNum)
-        values.put("numerator", if (numerator) "1" else "0")
+        values.put("will_lesson_be", if (willLessonBe) "1" else "0")
         values.put("subject", subjectId)
-        teacherId?.let { values.put("teacher", teacherId) }
-        cabinetId?.let { values.put("cabinet", cabinetId) }
+        values.put("teacher", teacherId)
+        values.put("cabinet", cabinetId)
 
         val db = dbHelper.writableDatabase
-        val id: Long = db.insert("schedule", null, values)
+        val id = db.insert("temp_schedule", null, values)
         db.close()
         return id
     }
@@ -77,55 +74,48 @@ class ScheduleRepo(
         course: Int,
         group: Int,
         subgroup: Int,
-        dayOfWeek: Int,
+        lessonDate: LocalDate,
         lessonNum: Int,
-        numerator: Boolean,
-        subject: String,
+        willLessonBe: Boolean,
+        subject: String?,
         surname: String?,
         name: String?,
         patronymic: String?,
         cabinet: String?,
         building: String?
     ): Int {
-        val foundFlow: Flow? = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(
-            educationLevel, course, group, subgroup
-        )
+        val foundFlow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup)
         val flowId = foundFlow?.id ?: flowRepo.add(educationLevel, course, group, subgroup)
 
-        val foundSubject = subjectRepo.findBySubject(
-            subject
-        )
-        val subjectId = foundSubject?.id ?: subjectRepo.add(subject)
+        var subjectId: Long? = null
+        if (subject?.isNotBlank() == true) {
+            val foundSubject = subjectRepo.findBySubject(subject)
+            subjectId = foundSubject?.id ?: subjectRepo.add(subject)
+        }
 
         var teacherId: Long? = null
         if (surname?.isNotBlank() == true) {
-            val foundTeacher = teacherRepo.findBySurnameAndNameAndPatronymic(
-                surname, name, patronymic
-            )
+            val foundTeacher = teacherRepo.findBySurnameAndNameAndPatronymic(surname, name, patronymic)
             teacherId = foundTeacher?.id ?: teacherRepo.add(surname, name, patronymic)
         }
 
         var cabinetId: Long? = null
         if (cabinet?.isNotBlank() == true) {
-            val foundCabinet = cabinetRepo.findByCabinetAndBuilding(
-                cabinet, building
-            )
+            val foundCabinet = cabinetRepo.findByCabinetAndBuilding(cabinet, building)
             cabinetId = foundCabinet?.id ?: cabinetRepo.add(cabinet, building)
         }
 
         val values = ContentValues()
+        values.put("will_lesson_be", if (willLessonBe) "1" else "0")
         values.put("subject", subjectId)
         values.put("teacher", teacherId)
         values.put("cabinet", cabinetId)
 
-        val whereClause = "flow=? AND day_of_week=? AND lesson_num=? AND numerator=?"
-        val whereArgs = arrayOf(
-            flowId.toString(), dayOfWeek.toString(), lessonNum.toString(),
-            if (numerator) "1" else "0"
-        )
+        val whereClause = "flow=? AND lesson_date=? AND lesson_num=?"
+        val whereArgs = arrayOf(flowId.toString(), lessonDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), lessonNum.toString())
 
         val db = dbHelper.writableDatabase
-        val count: Int = db.update("schedule", values, whereClause, whereArgs)
+        val count = db.update("temp_schedule", values, whereClause, whereArgs)
         db.close()
         return count
     }
@@ -135,49 +125,46 @@ class ScheduleRepo(
         course: Int,
         group: Int,
         subgroup: Int,
-        dayOfWeek: Int,
+        lessonDate: LocalDate,
         lessonNum: Int,
-        numerator: Boolean,
-        subject: String,
+        willLessonBe: Boolean,
+        subject: String?,
         surname: String?,
         name: String?,
         patronymic: String?,
         cabinet: String?,
         building: String?
     ) {
-        val foundSchedule = findByFlowAndDayOfWeekAndLessonNumAndNumerator(
-            educationLevel, course, group, subgroup, dayOfWeek, lessonNum, numerator
-        )
-        foundSchedule?.let {
-            update(educationLevel, course, group, subgroup, dayOfWeek, lessonNum, numerator, subject, surname, name, patronymic, cabinet, building)
+        val foundTempSchedule = findByFlowAndLessonDateAndLessonNum(educationLevel, course, group, subgroup, lessonDate, lessonNum)
+        foundTempSchedule?.let {
+            update(educationLevel, course, group, subgroup, lessonDate, lessonNum, willLessonBe, subject, surname, name, patronymic, cabinet, building)
         } ?: run {
-            add(educationLevel, course, group, subgroup, dayOfWeek, lessonNum, numerator, subject, surname, name, patronymic, cabinet, building)
+            add(educationLevel, course, group, subgroup, lessonDate, lessonNum, willLessonBe, subject, surname, name, patronymic, cabinet, building)
         }
     }
 
     @SuppressLint("Range")
-    fun findByFlowAndDayOfWeekAndLessonNumAndNumerator(
+    fun findByFlowAndLessonDateAndLessonNum(
         educationLevel: Int,
         course: Int,
         group: Int,
         subgroup: Int,
-        dayOfWeek: Int,
-        lessonNum: Int,
-        numerator: Boolean
-    ): Schedule? {
-        var result: Schedule? = null
+        lessonDate: LocalDate,
+        lessonNum: Int
+    ): TempSchedule? {
+        var result: TempSchedule? = null
 
         val sql = """
-            SELECT sch.id AS schedule_id, sch.flow AS flow_id, sch.subject AS subject_id, sch.teacher AS teacher_id, sch.cabinet AS cabinet_id,
-                sub.subject, t.surname, t.name, t.patronymic, c.cabinet, c.building, c.address
-            FROM schedule sch
-            JOIN flow f ON sch.flow = f.id
-            JOIN subject sub ON sch.subject = sub.id
-            LEFT JOIN teacher t ON sch.teacher = t.id
-            LEFT JOIN cabinet c ON sch.cabinet = c.id
-            WHERE education_level=? AND course=? AND _group=? AND subgroup=? AND day_of_week=? AND lesson_num=? AND numerator=?
+            SELECT ts.id AS temp_id, ts.flow AS flow_id, ts.subject AS subject_id, ts.teacher AS teacher_id, ts.cabinet AS cabinet_id,
+                ts.will_lesson_be, s.subject, t.surname, t.name, t.patronymic, c.cabinet, c.building, c.address
+            FROM temp_schedule ts
+            JOIN flow f ON ts.flow = f.id
+            LEFT JOIN subject s ON ts.subject = s.id
+            LEFT JOIN teacher t ON ts.teacher = t.id
+            LEFT JOIN cabinet c ON ts.cabinet = c.id
+            WHERE education_level=? AND course=? AND _group=? AND subgroup=? AND lesson_date=? AND lesson_num=?
         """.trimIndent()
-        val selectionArgs = arrayOf(educationLevel.toString(), course.toString(), group.toString(), subgroup.toString(), dayOfWeek.toString(), lessonNum.toString(), if (numerator) "1" else "0")
+        val selectionArgs = arrayOf(educationLevel.toString(), course.toString(), group.toString(), subgroup.toString(), lessonDate.toString(), lessonNum.toString())
         val db = dbHelper.readableDatabase
         val cursor: Cursor = db.rawQuery(sql, selectionArgs)
         if (cursor.moveToFirst()) {
@@ -196,15 +183,16 @@ class ScheduleRepo(
             val building = cursor.getString(cursor.getColumnIndex("building"))
             val address = cursor.getString(cursor.getColumnIndex("address"))
 
-            val id = cursor.getLong(cursor.getColumnIndex("schedule_id"))
+            val id = cursor.getLong(cursor.getColumnIndex("temp_id"))
+            val willLessonBe = cursor.getInt(cursor.getColumnIndex("will_lesson_be")) == 1
 
-            result = Schedule(
+            result = TempSchedule(
                 id,
                 Flow(flowId, educationLevel, course, group, subgroup),
-                dayOfWeek,
+                lessonDate,
                 lessonNum,
-                numerator,
-                Subject(subjectId, subject),
+                willLessonBe,
+                if (subjectId == 0L) null else Subject(subjectId, subject),
                 if (teacherId == 0L) null else Teacher(teacherId, surname, name, patronymic),
                 if (cabinetId == 0L) null else Cabinet(cabinetId, cabinet, building, address)
             )
@@ -220,24 +208,24 @@ class ScheduleRepo(
         course: Int,
         group: Int,
         subgroup: Int
-    ): List<Schedule> {
-        val result = mutableListOf<Schedule>()
+    ): List<TempSchedule> {
+        var result = mutableListOf<TempSchedule>()
 
         val sql = """
-            SELECT sch.id AS schedule_id, sch.flow AS flow_id, sch.subject AS subject_id, sch.teacher AS teacher_id, sch.cabinet AS cabinet_id,
-                sch.day_of_week, sch.lesson_num, sch.numerator,
-                sub.subject, t.surname, t.name, t.patronymic, c.cabinet, c.building, c.address
-            FROM schedule sch
-            JOIN flow f ON sch.flow = f.id
-            JOIN subject sub ON sch.subject = sub.id
-            LEFT JOIN teacher t ON sch.teacher = t.id
-            LEFT JOIN cabinet c ON sch.cabinet = c.id
-            WHERE education_level=? AND course=? AND _group=? AND subgroup=?
+            SELECT ts.id AS temp_id, ts.flow AS flow_id, ts.subject AS subject_id, ts.teacher AS teacher_id, ts.cabinet AS cabinet_id,
+                ts.lesson_date, ts.lesson_num, ts.will_lesson_be,
+                s.subject, t.surname, t.name, t.patronymic, c.cabinet, c.building, c.address
+            FROM temp_schedule ts
+            JOIN flow f ON ts.flow = f.id
+            LEFT JOIN subject s ON ts.subject = s.id
+            LEFT JOIN teacher t ON ts.teacher = t.id
+            LEFT JOIN cabinet c ON ts.cabinet = c.id
+            WHERE education_level=? AND course=? AND _group=? AND subgroup=? AND lesson_date=? AND lesson_num=?
         """.trimIndent()
         val selectionArgs = arrayOf(educationLevel.toString(), course.toString(), group.toString(), subgroup.toString())
         val db = dbHelper.readableDatabase
         val cursor: Cursor = db.rawQuery(sql, selectionArgs)
-        while (cursor.moveToNext()) {
+        if (cursor.moveToFirst()) {
             val flowId = cursor.getLong(cursor.getColumnIndex("flow_id"))
 
             val subjectId = cursor.getLong(cursor.getColumnIndex("subject_id"))
@@ -253,18 +241,18 @@ class ScheduleRepo(
             val building = cursor.getString(cursor.getColumnIndex("building"))
             val address = cursor.getString(cursor.getColumnIndex("address"))
 
-            val id = cursor.getLong(cursor.getColumnIndex("schedule_id"))
-            val dayOfWeek = cursor.getInt(cursor.getColumnIndex("day_of_week"))
+            val id = cursor.getLong(cursor.getColumnIndex("temp_id"))
+            val lessonDate = LocalDate.parse(cursor.getString(cursor.getColumnIndex("lesson_date")), DateTimeFormatter.ofPattern("yyyy-MM-dd"))
             val lessonNum = cursor.getInt(cursor.getColumnIndex("lesson_num"))
-            val numerator = cursor.getInt(cursor.getColumnIndex("numerator")) == 1
+            val willLessonBe = cursor.getInt(cursor.getColumnIndex("will_lesson_be")) == 1
 
-            result.add(Schedule(
+            result.add(TempSchedule(
                 id,
                 Flow(flowId, educationLevel, course, group, subgroup),
-                dayOfWeek,
+                lessonDate,
                 lessonNum,
-                numerator,
-                Subject(subjectId, subject),
+                willLessonBe,
+                if (subjectId == 0L) null else Subject(subjectId, subject),
                 if (teacherId == 0L) null else Teacher(teacherId, surname, name, patronymic),
                 if (cabinetId == 0L) null else Cabinet(cabinetId, cabinet, building, address)
             ))
@@ -274,22 +262,33 @@ class ScheduleRepo(
         return result
     }
 
-    fun deleteByFlowAndDayOfWeekAndLessonNumAndNumerator(
+    fun deleteByFlowAndLessonDateAndLessonNum(
         educationLevel: Int,
         course: Int,
         group: Int,
         subgroup: Int,
-        dayOfWeek: Int,
-        lessonNum: Int,
-        numerator: Boolean
+        lessonDate: LocalDate,
+        lessonNum: Int
     ): Int {
-        val foundFlow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup) ?: return 0
+        val foundFlow: Flow = flowRepo.findByEducationLevelAndCourseAndGroupAndSubgroup(educationLevel, course, group, subgroup) ?: return 0
 
-        val whereClause = "flow=? AND day_of_week=? AND lesson_num=? AND numerator=?"
-        val whereArgs = arrayOf(foundFlow.id.toString(), dayOfWeek.toString(), lessonNum.toString(), if (numerator) "1" else "0")
+        val whereClause = "flow=? AND lesson_date=? AND lesson_num=?"
+        val whereArgs = arrayOf(foundFlow.id.toString(), lessonDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), lessonNum.toString())
 
         val db = dbHelper.writableDatabase
-        val count = db.delete("schedule", whereClause, whereArgs)
+        val count = db.delete("temp_schedule", whereClause, whereArgs)
+        db.close()
+        return count
+    }
+
+    fun deleteAllBeforeDate(
+        date: LocalDate
+    ): Int {
+        val whereClause = "lesson_date<?"
+        val whereArgs = arrayOf(date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+
+        val db = dbHelper.writableDatabase
+        val count = db.delete("temp_schedule", whereClause, whereArgs)
         db.close()
         return count
     }

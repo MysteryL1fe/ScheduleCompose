@@ -7,6 +7,7 @@ import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
 import com.example.schedule.compose.entity.Subject
 import com.example.schedule.compose.entity.Teacher
+import com.example.schedule.compose.entity.TempSchedule
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
@@ -52,6 +53,7 @@ class RetrofitService private constructor() {
     private val teacherService = retrofit.create(TeacherController::class.java)
     private val cabinetService = retrofit.create(CabinetController::class.java)
     private val scheduleService = retrofit.create(ScheduleController::class.java)
+    private val tempScheduleService = retrofit.create(TempScheduleController::class.java)
     private val homeworkService = retrofit.create(HomeworkController::class.java)
 
     fun getFlow(educationLevel: Int, course: Int, group: Int, subgroup: Int, onSuccess: (Flow) -> Unit) {
@@ -158,6 +160,21 @@ class RetrofitService private constructor() {
             override fun onFailure(p0: Call<List<Schedule>>, p1: Throwable) {
                 Log.e(TAG, "Receive schedules by teacher failure")
                 onFailure()
+            }
+        })
+    }
+
+    fun getAllTempSchedulesByFlow(educationLevel: Int, course: Int, group: Int, subgroup: Int, onSuccess: (List<TempSchedule>) -> Unit) {
+        val call = tempScheduleService.getAllByFlow(educationLevel, course, group, subgroup)
+        call.enqueue(object : Callback<List<TempSchedule>> {
+            override fun onResponse(call: Call<List<TempSchedule>>, response: Response<List<TempSchedule>>) {
+                if (response.isSuccessful) {
+                    response.body()?.let(onSuccess)
+                }
+            }
+
+            override fun onFailure(p0: Call<List<TempSchedule>>, p1: Throwable) {
+                Log.e(TAG, "Receive temp schedule by flow failure")
             }
         })
     }

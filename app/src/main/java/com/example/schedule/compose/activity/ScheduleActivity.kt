@@ -34,6 +34,7 @@ import com.example.schedule.compose.R
 import com.example.schedule.compose.entity.Flow
 import com.example.schedule.compose.entity.Homework
 import com.example.schedule.compose.entity.Schedule
+import com.example.schedule.compose.entity.TempSchedule
 import com.example.schedule.compose.repo.CabinetRepo
 import com.example.schedule.compose.repo.FlowRepo
 import com.example.schedule.compose.repo.HomeworkRepo
@@ -41,12 +42,14 @@ import com.example.schedule.compose.repo.ScheduleDBHelper
 import com.example.schedule.compose.repo.ScheduleRepo
 import com.example.schedule.compose.repo.SubjectRepo
 import com.example.schedule.compose.repo.TeacherRepo
+import com.example.schedule.compose.repo.TempScheduleRepo
 import com.example.schedule.compose.retrofit.RetrofitService
 import com.example.schedule.compose.screen.ChangeScheduleScreen
 import com.example.schedule.compose.screen.FindTeacherScreen
 import com.example.schedule.compose.screen.HomeworkScreen
 import com.example.schedule.compose.screen.ScheduleScreen
 import com.example.schedule.compose.screen.SettingsScreen
+import com.example.schedule.compose.screen.TempScheduleScreen
 import com.example.schedule.compose.theme.ScheduleComposeTheme
 import com.example.schedule.compose.theme.ThemeManager
 import com.example.schedule.compose.utils.SettingsStorage
@@ -56,6 +59,7 @@ import com.example.schedule.compose.view.model.screen.FindTeacherScreenViewModel
 import com.example.schedule.compose.view.model.screen.HomeworkScreenViewModel
 import com.example.schedule.compose.view.model.screen.ScheduleScreenViewModel
 import com.example.schedule.compose.view.model.screen.SettingsScreenViewModel
+import com.example.schedule.compose.view.model.screen.TempScheduleScreenViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -66,11 +70,11 @@ class ScheduleActivity : ComponentActivity() {
     private var subgroup = 1
     private lateinit var flowRepo: FlowRepo
     private lateinit var scheduleRepo: ScheduleRepo
+    private lateinit var tempScheduleRepo: TempScheduleRepo
     private lateinit var homeworkRepo: HomeworkRepo
     private lateinit var retrofitService: RetrofitService
     private lateinit var scheduleScreenViewModel: ScheduleScreenViewModel
     private lateinit var changeScheduleScreenViewModel: ChangeScheduleScreenViewModel
-    private lateinit var homeworkScreenViewModel: HomeworkScreenViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,6 +90,7 @@ class ScheduleActivity : ComponentActivity() {
         val teacherRepo = TeacherRepo(scheduleDBHelper)
         val cabinetRepo = CabinetRepo(scheduleDBHelper)
         scheduleRepo = ScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
+        tempScheduleRepo = TempScheduleRepo(scheduleDBHelper, flowRepo, subjectRepo, teacherRepo, cabinetRepo)
         homeworkRepo = HomeworkRepo(scheduleDBHelper, flowRepo, subjectRepo)
 
         val saves = getSharedPreferences(SettingsStorage.SCHEDULE_SAVES, MODE_PRIVATE)
@@ -93,13 +98,15 @@ class ScheduleActivity : ComponentActivity() {
         if (SettingsStorage.useServer) {
             retrofitService = RetrofitService.getInstance()
             retrofitService.getFlow(educationLevel, course, group, subgroup, ::updateFlow)
+            retrofitService.getAllTempSchedulesByFlow(educationLevel, course, group, subgroup, ::updateTempSchedules)
             retrofitService.getAllHomeworksByFlow(educationLevel, course, group, subgroup, ::updateHomeworks)
         }
 
         val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
-        scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
+        scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, tempScheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
         changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
-        homeworkScreenViewModel = HomeworkScreenViewModel(subjectRepo, scheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
+        val tempScheduleScreenViewModel = TempScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, tempScheduleRepo, educationLevel, course, group, subgroup)
+        val homeworkScreenViewModel = HomeworkScreenViewModel(subjectRepo, scheduleRepo, tempScheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
         val findTeacherScreenViewModel = FindTeacherScreenViewModel()
         val settingsScreenViewModel = SettingsScreenViewModel(scheduleDBHelper, scheduleActivityViewModel, saves, this)
 
@@ -111,6 +118,7 @@ class ScheduleActivity : ComponentActivity() {
                     scheduleActivityViewModel,
                     scheduleScreenViewModel,
                     changeScheduleScreenViewModel,
+                    tempScheduleScreenViewModel,
                     homeworkScreenViewModel,
                     findTeacherScreenViewModel,
                     settingsScreenViewModel
@@ -146,6 +154,10 @@ class ScheduleActivity : ComponentActivity() {
         changeScheduleScreenViewModel.update()
     }
 
+    private fun updateTempSchedules(tempSchedules: List<TempSchedule>) {
+        tempSchedules.forEach { tempScheduleRepo.addOrUpdate(it.flow.educationLevel, it.flow.course, it.flow.group, it.flow.subgroup, it.lessonDate, it.lessonNum, it.willLessonBe, it.subject?.subject, it.teacher?.surname, it.teacher?.name, it.teacher?.patronymic, it.cabinet?.cabinet, it.cabinet?.building) }
+    }
+
     private fun updateHomeworks(homeworks: List<Homework>) {
         homeworks.forEach { homeworkRepo.addOrUpdate(it.flow.educationLevel, it.flow.course, it.flow.group, it.flow.subgroup, it.homework, it.lessonDate, it.lessonNum, it.subject.subject) }
     }
@@ -170,6 +182,7 @@ fun ScheduleApp(
     viewModel: ScheduleActivityViewModel,
     scheduleScreenViewModel: ScheduleScreenViewModel,
     changeScheduleScreenViewModel: ChangeScheduleScreenViewModel,
+    tempScheduleScreenViewModel: TempScheduleScreenViewModel,
     homeworkScreenViewModel: HomeworkScreenViewModel,
     findTeacherScreenViewModel: FindTeacherScreenViewModel,
     settingsScreenViewModel: SettingsScreenViewModel
@@ -223,6 +236,13 @@ fun ScheduleApp(
                     changeScheduleScreenViewModel.update()
                     ChangeScheduleScreen(
                         viewModel = changeScheduleScreenViewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+                MenuItem.TEMP_SCHEDULE -> {
+                    tempScheduleScreenViewModel.update()
+                    TempScheduleScreen(
+                        viewModel = tempScheduleScreenViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

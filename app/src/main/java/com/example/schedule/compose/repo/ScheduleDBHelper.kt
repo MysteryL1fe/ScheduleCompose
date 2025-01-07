@@ -103,7 +103,7 @@ class ScheduleDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
                 will_lesson_be INTEGER NOT NULL,
                 subject INTEGER,
                 teacher INTEGER,
-                cabinet INTEGER NOT NULL,
+                cabinet INTEGER,
                 FOREIGN KEY (flow) REFERENCES flow(id),
                 FOREIGN KEY (subject) REFERENCES subject(id),
                 FOREIGN KEY (teacher) REFERENCES teacher(id),
