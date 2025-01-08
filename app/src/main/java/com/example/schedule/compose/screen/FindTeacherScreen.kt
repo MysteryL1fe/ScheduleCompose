@@ -1,5 +1,11 @@
 package com.example.schedule.compose.screen
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -103,7 +109,8 @@ fun FindTeacherScreen(
             },
             colors = buttonColors,
             contentPadding = PaddingValues(25.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(20.dp)
         ) {
             Text(
@@ -115,8 +122,18 @@ fun FindTeacherScreen(
         }
 
         if (viewModel.loading) {
+            val infiniteTransition = rememberInfiniteTransition()
+            val progress by infiniteTransition.animateFloat(
+                initialValue = 0.0f,
+                targetValue = 1.0f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                )
+            )
+
             CircularProgressIndicator(
-                progress = { 1f },
+                progress = { progress },
                 modifier = Modifier.align(Alignment.CenterHorizontally),
                 color = MaterialTheme.colorScheme.secondary,
             )
@@ -160,12 +177,14 @@ private fun ScheduleView(
     viewModel: FindTeacherScreenViewModel
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(0.dp, 5.dp)
         ) {
             Row(
@@ -195,7 +214,8 @@ private fun ScheduleView(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .padding(bottom = 10.dp)
         ) {
             Column {
@@ -257,7 +277,8 @@ private fun DropdownTextField(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .padding(start = 16.dp, top = 10.dp, end = 16.dp)
     ) {
         TextField(
@@ -273,7 +294,8 @@ private fun DropdownTextField(
             singleLine = true,
             colors = textFieldColors,
             textStyle = TextStyle(fontSize = viewModel.textSize),
-            modifier = Modifier.menuAnchor()
+            modifier = Modifier
+                .menuAnchor()
                 .fillMaxWidth(),
         )
         ExposedDropdownMenu(

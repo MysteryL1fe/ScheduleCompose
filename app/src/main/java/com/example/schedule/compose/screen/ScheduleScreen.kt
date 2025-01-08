@@ -1,6 +1,13 @@
 package com.example.schedule.compose.screen
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -93,6 +101,7 @@ private fun SchedulesView(
             thickness = 2.dp,
             color = MaterialTheme.colorScheme.secondary
         )
+
         (0..7).forEach { index ->
             val schedule = schedules[index]
             val homework = homeworks[index]
@@ -103,6 +112,7 @@ private fun SchedulesView(
                     homework = homework,
                     tempSchedule = tempSchedule,
                     lessonNum = index + 1,
+                    shouldCreateTimer = viewModel.timerDayOffset == daysOffset && viewModel.timerLessonNum == index + 1,
                     viewModel = viewModel
                 )
                 HorizontalDivider(
@@ -120,12 +130,34 @@ private fun ScheduleView(
     tempSchedule: TempSchedule?,
     homework: Homework?,
     lessonNum: Int,
+    shouldCreateTimer: Boolean,
     viewModel: ScheduleScreenViewModel
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
             .background(MaterialTheme.colorScheme.primary)
     ) {
+        if (shouldCreateTimer && viewModel.timerBeforeLesson) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                BlinkingCircle()
+                Text(
+                    text = if (viewModel.timeLeft / 60 / 60 > 0) String.format("%02d:%02d:%02d", viewModel.timeLeft / 60 / 60, viewModel.timeLeft / 60 % 60, viewModel.timeLeft % 60)
+                    else if (viewModel.timeLeft / 60 > 0) String.format("%02d:%02d", viewModel.timeLeft / 60, viewModel.timeLeft % 60)
+                    else String.format("%02d", viewModel.timeLeft),
+                    color = MaterialTheme.colorScheme.tertiary,
+                    fontSize = viewModel.textSize
+                )
+            }
+
+            HorizontalDivider(
+                thickness = 2.dp,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
@@ -164,9 +196,26 @@ private fun ScheduleView(
                 )
             }
 
-            Spacer(
-                modifier = Modifier.weight(1f)
-            )
+            if (shouldCreateTimer && !viewModel.timerBeforeLesson) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    BlinkingCircle()
+                    Text(
+                        text = if (viewModel.timeLeft / 60 / 60 > 0) String.format("%02d:%02d:%02d", viewModel.timeLeft / 60 / 60, viewModel.timeLeft / 60 % 60, viewModel.timeLeft % 60)
+                        else if (viewModel.timeLeft / 60 > 0) String.format("%02d:%02d", viewModel.timeLeft / 60, viewModel.timeLeft % 60)
+                        else String.format("%02d", viewModel.timeLeft),
+                        color = MaterialTheme.colorScheme.tertiary,
+                        fontSize = viewModel.textSize
+                    )
+                }
+            } else {
+                Spacer(
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             Text(
                 text = Utils.lessonsBeginning[lessonNum - 1] + " - " + Utils.lessonsEnding[lessonNum - 1],
@@ -290,3 +339,27 @@ private fun ScheduleView(
         }
     }
 }
+
+@Composable
+fun BlinkingCircle() {
+    val infiniteTransition = rememberInfiniteTransition()
+
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.0f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+
+    Icon(
+        painter = painterResource(R.drawable.circle),
+        contentDescription = null,
+        tint = Color.Red.copy(alpha = alpha),
+        modifier = Modifier
+            .size(32.dp)
+            .padding(end = 10.dp)
+    )
+}
+

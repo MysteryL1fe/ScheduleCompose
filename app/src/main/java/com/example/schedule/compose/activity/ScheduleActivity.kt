@@ -73,6 +73,7 @@ class ScheduleActivity : ComponentActivity() {
     private lateinit var tempScheduleRepo: TempScheduleRepo
     private lateinit var homeworkRepo: HomeworkRepo
     private lateinit var retrofitService: RetrofitService
+    private lateinit var scheduleActivityViewModel: ScheduleActivityViewModel
     private lateinit var scheduleScreenViewModel: ScheduleScreenViewModel
     private lateinit var changeScheduleScreenViewModel: ChangeScheduleScreenViewModel
 
@@ -102,7 +103,7 @@ class ScheduleActivity : ComponentActivity() {
             retrofitService.getAllHomeworksByFlow(educationLevel, course, group, subgroup, ::updateHomeworks)
         }
 
-        val scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
+        scheduleActivityViewModel = ScheduleActivityViewModel(course, group, subgroup)
         scheduleScreenViewModel = ScheduleScreenViewModel(scheduleRepo, tempScheduleRepo, homeworkRepo, educationLevel, course, group, subgroup)
         changeScheduleScreenViewModel = ChangeScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, educationLevel, course, group, subgroup)
         val tempScheduleScreenViewModel = TempScheduleScreenViewModel(subjectRepo, teacherRepo, cabinetRepo, scheduleRepo, tempScheduleRepo, educationLevel, course, group, subgroup)
@@ -114,6 +115,7 @@ class ScheduleActivity : ComponentActivity() {
             ScheduleComposeTheme(
                 theme = ThemeManager.theme.collectAsState().value
             ) {
+                scheduleScreenViewModel.timerCoroutineScope = rememberCoroutineScope()
                 ScheduleApp(
                     scheduleActivityViewModel,
                     scheduleScreenViewModel,
@@ -125,6 +127,18 @@ class ScheduleActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (scheduleActivityViewModel.activeMenuItem == MenuItem.SCHEDULE) {
+            scheduleScreenViewModel.updateTimer()
+        }
+    }
+
+    override fun onPause() {
+        scheduleScreenViewModel.stopTimer()
+        super.onPause()
     }
 
     private fun updateFlow(flow: Flow) {
@@ -224,6 +238,7 @@ fun ScheduleApp(
             containerColor = MaterialTheme.colorScheme.background,
             contentColor = MaterialTheme.colorScheme.primary
         ) { innerPadding ->
+            if (viewModel.activeMenuItem != MenuItem.SCHEDULE) scheduleScreenViewModel.stopTimer()
             when (viewModel.activeMenuItem) {
                 MenuItem.SCHEDULE -> {
                     scheduleScreenViewModel.update()

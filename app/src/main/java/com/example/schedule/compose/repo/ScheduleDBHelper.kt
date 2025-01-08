@@ -8,7 +8,7 @@ class ScheduleDBHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
 
     companion object {
         const val DATABASE_VERSION = 1
-        const val DATABASE_NAME = "schedule"
+        const val DATABASE_NAME = "schedule.compose.db"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
