@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.schedule.compose"
+    namespace = "ru.khanin.dmitrii.schedule.compose"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.schedule.compose"
+        applicationId = "ru.khanin.dmitrii.schedule.compose"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Schedule compose"
+rootProject.name = "Schedule"
 include(":app")
  
