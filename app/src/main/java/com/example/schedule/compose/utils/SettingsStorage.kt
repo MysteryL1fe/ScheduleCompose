@@ -7,10 +7,10 @@ import com.example.schedule.compose.entity.Flow
 import com.example.schedule.compose.theme.Theme
 
 object SettingsStorage {
-    private const val VERSION = 1.00011f
+    private const val VERSION = 1.00012f
     const val SCHEDULE_SAVES = "ScheduleSaves"
 
-    var textSize: TextUnit = 1.sp
+    var textSize: TextUnit = 16.sp
         private set
     var displayModeFull = false
         private set
@@ -18,6 +18,12 @@ object SettingsStorage {
         private set
 
     fun init(saves: SharedPreferences) {
+        if (!isLastVersion(saves)) {
+            val editor = saves.edit()
+            editor.clear()
+            editor.apply()
+            changeToLastVersion(saves)
+        }
         textSize = saves.getInt("textSize", 16).sp
         displayModeFull = saves.getBoolean("displayModeFull", false)
         useServer = saves.getBoolean("useServer", true)
@@ -30,29 +36,24 @@ object SettingsStorage {
         SettingsStorage.textSize = textSize
     }
 
-    // Get current version from SharedPreferences
     fun getCurVersion(saves: SharedPreferences): Float {
         return saves.getFloat("version", 0f)
     }
 
-    // Check if the current version is the last version
     fun isLastVersion(saves: SharedPreferences): Boolean {
         return VERSION == getCurVersion(saves)
     }
 
-    // Set the current version to the last version
     fun changeToLastVersion(saves: SharedPreferences) {
         val editor = saves.edit()
         editor.putFloat("version", VERSION)
         editor.apply()
     }
 
-    // Get the current flow data
     fun getCurFlow(saves: SharedPreferences): Flow {
         return Flow(saves.getInt("flowLvl", 1), saves.getInt("course", 0), saves.getInt("group", 0), saves.getInt("subgroup", 0))
     }
 
-    // Save the current flow data
     fun saveCurFlow(flowLvl: Int, course: Int, group: Int, subgroup: Int, saves: SharedPreferences) {
         val editor = saves.edit()
         editor.putInt("flowLvl", flowLvl)
@@ -62,12 +63,10 @@ object SettingsStorage {
         editor.apply()
     }
 
-    // Get the current theme
     fun getTheme(saves: SharedPreferences): Theme {
         return Theme.valueOf(saves.getString("theme", "SYSTEM")!!)
     }
 
-    // Save the theme
     fun setTheme(theme: Theme, saves: SharedPreferences) {
         val editor = saves.edit()
         editor.putString("theme", theme.name)
